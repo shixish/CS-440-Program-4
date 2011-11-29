@@ -25,11 +25,6 @@ import math
 
 ### Statistics class ###
 
-# Global Constants
-PI = 3.1415926535897;
-ONEOVERPI = 1.0/PI;
-TWOPI = 2.0*PI;
-
 class Fxrandom:
 	""" A class with some useful statistical functions """
 	
