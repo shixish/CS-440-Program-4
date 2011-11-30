@@ -103,14 +103,25 @@ class Graph:
 		""" Same as checkEdgePresent, minus the validity checks """
 		return self.adjMatrix[v1][v2]
 	
-	def greedySolutaion(self):
+	def greedySolution(self):
 		""" Finds an independent set using a greedy solution """
-		#Initialize an empty set
-		set = [False for i in range(self.sizeN)]
+		# Initialize an empty set
+		vs = VSet(self.sizeN)
 		
-		#TODO: implement greedy algorithm
+		# Rank the vertexes by their connectedness
+		vrank = []
+		for i, row in enumerate(self.adjMatrix):
+			vrank.append([i, row.count(True)])
+		vrank = sorted(vrank, key=lambda v: v[1])
 		
-		return set
+		# Try to add each vector from lowest connectedness up.  
+		# If the vector breaks the set, toggle it back.
+		for v in vrank:
+			vs.toggleVertex(v[0])
+			if g.evaluateSet(vs) == -1:
+				vs.toggleVertex(v[0])
+		
+		return vs
 	
 	def setFitness(self, vset):
 		""" Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 """
