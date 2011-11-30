@@ -23,43 +23,30 @@ import datetime
 import math
 
 
-### Statistics class ###
+### Vertex Set Class ###
 
-class Fxrandom:
-	""" A class with some useful statistical functions """
+class VSet:
+	""" A class representing a list of vertices in a graph """
 	
-	def __init__(self, initSeed=0):
-		""" Constructor: set class variables, set seed as specified or by system clock if 0(default) """
-		self.modulus = 0x7fffffff;
-		self.multiplier = 630360016;
-		self.setSeed(initSeed)
+	def __init__(self, size):
+		""" Constructor for vertex set, accepts size and initializes all vertices to False """
+		self.set = [False for i in range(size)]
+		
+	def toggleVertex(self, i):
+		""" Toggle whether a vertex at the given index is included in the set or not """
+		self.set[i] = not self.set[i]
 	
-	def setSeed(self, initSeed=0):
-		""" Reset seed: If initSeed=0 (default) set seed to clock miliseconds, else use passed seed """
-		if initSeed==0:
-			self.seed = datetime.datetime.now().microsecond/1000
-		else:
-			self.seed = initSeed
+	def total(self):
+		""" Returns the number of verticies in this set """
+		return self.set.count(True)
 	
-	def random(self):
-		""" Returns a random integer 0...0x7fffffff """
-		self.seed = ((self.multiplier * self.seed) % self.modulus)
-		return math.fabs(self.seed)
-	
-	def uniform(self, min, max):
-		""" Returns a random double between min & max """
-		val=0.0
-		if min >= max:
-			raise ValueError("min must be less than max.")
-		val = (min + (max - min) * (self.random())/(self.modulus))
-		return val
-	
-	def boolBernoulli(self, probability):
-		""" Return an Bernoulli distributed random variable with given probability """
-		num = self.uniform(0.0, 1.0)
-		if(num <= probability):
-			return True
-		return False
+	def pagePrint(self):
+		""" Prints the members of this set as 1s(included) and 0s(excluded) grouped in sets of 50 """
+		for i, b in enumerate(self.set):
+			sys.stdout.write("1") if self.set[i] else sys.stdout.write("0")
+			if ((i+1)%50==0):
+				print "" 
+
 
 ### Graph Class ###	
 
@@ -105,10 +92,6 @@ class Graph:
 			# Debug code
 			print self.adjMatrix[i]
 	
-	def total(bitSet=[]):
-		""" Given an array of boolean values, returns number of True-valued members """
-		return bitSet.count(True)
-	
 	def checkEdgePresent(self, v1, v2):
 		""" Returns true if an edge exists between the two verticies, false otherwise or if invalid """
 		# Check legality of verticies
@@ -120,13 +103,6 @@ class Graph:
 		""" Same as checkEdgePresent, minus the validity checks """
 		return self.adjMatrix[v1][v2]
 	
-	def printBitset(self, bitSet):
-		""" Prints given bool array as 1s and 0s grouped in sets of 50 """
-		for i, b in enumerate(bitSet):
-			sys.stdout.write("1") if bitSet[i] else sys.stdout.write("0")
-			if ((i+1)%50==0):
-				print "" 
-	
 	def greedySolutaion(self):
 		""" Finds an independent set using a greedy solution """
 		#Initialize an empty set
@@ -136,9 +112,11 @@ class Graph:
 		
 		return set
 	
-	def evaluateSet(self, set):
+	def evaluateSet(self, vset):
 		""" Test to see if a passed set is independent, if yes, size of set is returned, -1 elsewise """
 		# Skip error test and assume len(set) == sizeN for quickness of algorithm
+		set = vset.set
+		
 		setSize = 0
 		independent = True
 		for i in range(self.sizeN):
@@ -154,3 +132,41 @@ class Graph:
 			return setSize
 		return -1
 
+
+### Statistics class ###
+
+class Fxrandom:
+	""" A class with some useful statistical functions """
+	
+	def __init__(self, initSeed=0):
+		""" Constructor: set class variables, set seed as specified or by system clock if 0(default) """
+		self.modulus = 0x7fffffff;
+		self.multiplier = 630360016;
+		self.setSeed(initSeed)
+	
+	def setSeed(self, initSeed=0):
+		""" Reset seed: If initSeed=0 (default) set seed to clock miliseconds, else use passed seed """
+		if initSeed==0:
+			self.seed = datetime.datetime.now().microsecond/1000
+		else:
+			self.seed = initSeed
+	
+	def random(self):
+		""" Returns a random integer 0...0x7fffffff """
+		self.seed = ((self.multiplier * self.seed) % self.modulus)
+		return math.fabs(self.seed)
+	
+	def uniform(self, min, max):
+		""" Returns a random double between min & max """
+		val=0.0
+		if min >= max:
+			raise ValueError("min must be less than max.")
+		val = (min + (max - min) * (self.random())/(self.modulus))
+		return val
+	
+	def boolBernoulli(self, probability):
+		""" Return an Bernoulli distributed random variable with given probability """
+		num = self.uniform(0.0, 1.0)
+		if(num <= probability):
+			return True
+		return False
