@@ -219,7 +219,7 @@ class Graph:
 			return setSize
 		return -1
 	
-	def Genetic(self, population=100, generations=50):
+	def GASolution(self, population=100, generations=50):
 		siblings = [VSet(self.sizeN).randomSolution() for i in range(population)]
 		print siblings
 		#for (g in range(generations)):
