@@ -38,14 +38,14 @@ class test:
 class VSet:
 	""" A class representing a list of vertices in a graph """
 	
-	def __init__(self, size, random=None, percentage=.2):
+	def __init__(self, size, random=None, density=.2):
 		if type(size) is list: #allows me to initialize a VSet with a list...
 			self.set = size
 		else:
-			""" Constructor for vertex set, accepts size, Fxrandom object (opt), and True/False density as percentage (opt) """
+			""" Constructor for vertex set, accepts size, Fxrandom object (opt), and True/False density (opt) """
 			if random and random.boolBernoulli:
 				#rand = Fxrandom(seed)
-				self.set = [random.boolBernoulli(percentage) for i in range(size)]
+				self.set = [random.boolBernoulli(density) for i in range(size)]
 			else:
 				""" Initializes all vertices to False """
 				self.set = [False for i in range(size)]
@@ -58,6 +58,10 @@ class VSet:
 	def total(self):
 		""" Returns the number of verticies in this set """
 		return self.set.count(True)
+		
+	def density(self):
+		""" Returns the percentage of true values in the set """
+		return self.total()/float(len(self.set))
 	
 	def pagePrint(self):
 		""" Prints the members of this set as 1s(included) and 0s(excluded) grouped in sets of 50 """
@@ -104,6 +108,7 @@ class Graph:
 			raise ValueError("Graph Init: seed must be >= 0.")
 		
 		# Define class variables
+		self.cnn = cnn
 		self.sizeN = size
 		self.rand = Fxrandom(seed)
 		print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
@@ -178,16 +183,16 @@ class Graph:
 
 	def rouletteSelection(self, popsel, popnumber):
 		"""	Stochastic Sampling (Roulette wheel) method of selecting parents
+			This method requires some extra preperation of the data, and fails when fitness is negative...
 			Source: http://www.cse.unr.edu/~banerjee/selection.htm """
 		choice = [ ]
 		k=0
 		while (k < popnumber):
 		    partsum = 0
 		    parent = 0
-		    randnum = self.rand.uniform(0.0,1.0)
+		    randnum = self.rand.uniform(0.0, 1.0)
 		    for i in range(0, popnumber):
 		        partsum += popsel[i].rank
-		        #print "%s %s"%(i, popsel[i].rank)
 		        if partsum >= randnum:
 		            parent = i
 		            break
@@ -195,40 +200,71 @@ class Graph:
 		    choice.append(parent)
 		return choice
 		
-	def combine(self, group1, group2):
-		return VSet([group1[i] if self.rand.boolBernoulli(.5) else group2[i] for i,v in enumerate(group1)])
+	'''
+	def tournamentSelection(popsel, popnumber):
+		choice = [ ]
+		k = 0
+		while (k < popnumber):
+		    parent = [ ]
+		    for j in range(0, 2):
+		        partsum = 0
+		        randnum = self.rand.uniform(0.0, 1.0)
+		        for i in range(0, popnumber):
+		            partsum += popsel[i].rank
+		            if partsum > randnum:
+		                parent.append(i)
+		                break
+		    if (popsel[parent[0]] > popsel[parent[1]]):
+		        choice.append(parent[0])
+		    else: 
+		    	choice.append(parent[1])
+		    k = k+1
+		return choice
+	'''
+	def mutate(self, value, rate=None):
+		if rate == None:
+			return value
+		return not value if self.rand.boolBernoulli(rate) else value
 		
-	def GASolution(self, popsize=100, generations=50, percentage=.10):
+	def combine(self, group1, group2, mutation):
+		return VSet([self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i,v in enumerate(group1)])
+		
+	def GASolution(self, popsize=100, generations=50, density=None, mutation=.001):
 		""" Finds an independent set using a Genetic Algorithm """
+		if not density:
+			density = self.greedySolution().density()*.25
+			print "Using density: %.5f"%density
+		
 		population = []
 		total = 0.0
 		#initialize the population
 		for i in range(popsize):
-			s = VSet(self.sizeN, random=self.rand, percentage=percentage)
+			s = VSet(self.sizeN, random=self.rand, density=density)
 			self.setFitness(s)
 			total += s.fitness
 			population.append(s)
 		
-		for p in population:
-			p.rank = p.fitness/total
-			
-		print "Average before: %.2f"%(total/popsize)
+		if total == 0:
+			print "Failure! Total fitness is zero... Something went wrong here."
+			return
 		
+		avg = total/popsize
+		print "Average before: %.2f"%(avg)
 		for g in range(generations):
-			total = 0.0
 			#population = sorted(population, key=lambda s: s.rank, reverse=True)
-			#maxrank = float(max(population, key=lambda s:s.rank).rank)
 			
+			for p in population:
+				p.rank = p.fitness/total #produces a percentage for weighting the roulette...
+				
 			males = self.rouletteSelection(population, popsize)
 			females = self.rouletteSelection(population, popsize)
+			
+			total = 0.0
 			for i in range(popsize):
-				s = self.combine(population[males[i]], population[females[i]])
+				s = self.combine(population[males[i]], population[females[i]], mutation=mutation)
 				self.setFitness(s)
 				total += s.fitness
 				population[i] = s
-			
-			for p in population:
-				p.rank = p.fitness/total
 		
 			#population = [VSet(self.sizeN, random=self.rand) for i in range(popsize)]
 			#for i, s in enumerate(siblings):
@@ -239,14 +275,15 @@ class Graph:
 		#for i,s in enumerate(population):
 		#	print "%i: %.8f"%(i,s.rank)
 			#print "%i: %.1f %s"%(i,s.rank, s)
-		
+		best = max(population, key=lambda s:s.fitness)
 		print "Average after: %.2f"%(total/popsize)
-		return max(population, key=lambda s:s.rank)
-	
+		print "Best: %.2f"%(best.fitness)
+		return best
 	
 	def setFitness(self, vset):
 		""" Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 """
 		# Skip error test and assume len(set) == sizeN for quickness of algorithm
+		# We may be able to merge this
 		set = vset.set
 		
 		setSize = connections = 0
@@ -256,7 +293,9 @@ class Graph:
 					if set[j] and self.adjMatrix[i][j]:
 						connections+=1
 				setSize+=1
-		fitness = (setSize*setSize)-(connections*connections)
+		fitness = float(setSize*setSize)-(connections*connections)
+		if fitness < 0: #i need the fitness to remain in the positives...
+			fitness = -1/fitness
 		vset.fitness = fitness
 		return fitness
 	
