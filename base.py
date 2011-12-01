@@ -227,7 +227,7 @@ class Graph:
 	def combine(self, group1, group2, mutation):
 		return VSet([self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i,v in enumerate(group1)])
 		
-	def GASolution(self, popsize=100, generations=50, density=None, mutation=.001):
+	def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0):
 		""" Finds an independent set using a Genetic Algorithm """
 		if not density:
 			density = self.greedySolution().density()*.25
@@ -248,27 +248,33 @@ class Graph:
 		
 		avg = total/popsize
 		print "Average before: %.2f"%(avg)
+		sys.stdout.write("Epoc: ")
 		for g in range(generations):
-			#population = sorted(population, key=lambda s: s.rank, reverse=True)
 			
 			for p in population:
 				p.rank = p.fitness/total #produces a percentage for weighting the roulette...
 				
-			males = self.rouletteSelection(population, popsize)
-			females = self.rouletteSelection(population, popsize)
+			if preserve > 0:
+				population = sorted(population, key=lambda s: s.fitness, reverse=True)
+			
+			randpop = popsize-preserve
+			males = self.rouletteSelection(population, randpop)
+			females = self.rouletteSelection(population, randpop)
 			
 			total = 0.0
-			for i in range(popsize):
+			for i in range(randpop):
 				s = self.combine(population[males[i]], population[females[i]], mutation=mutation)
 				self.setFitness(s)
 				total += s.fitness
-				population[i] = s
+				population[preserve+i] = s
 		
 			#population = [VSet(self.sizeN, random=self.rand) for i in range(popsize)]
 			#for i, s in enumerate(siblings):
 			#	s.rank = self.evaluateSet(s)
-		
-		
+			
+			sys.stdout.write("%i "%g)
+			sys.stdout.flush()
+		sys.stdout.write("\n")
 		
 		#for i,s in enumerate(population):
 		#	print "%i: %.8f"%(i,s.rank)
