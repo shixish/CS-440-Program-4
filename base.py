@@ -4,16 +4,16 @@
 #
 #	Professor 	: Dr. M. Peterson
 #	Students	: Cunnyngham, I.
-#				: Perkins, J.
-#				: Wessels, A.
+#			: Perkins, J.
+#			: Wessels, A.
 #
 #	Python implementaion of Dr. Peterson's 
-#		template for this project.  Most comments stolen 
-#		verbatum.  Statistical functions in Fxrandom are a
-#   Python implementation of Dr. Peterson's Java 
-#		implementation of a C++ random generator written by 
-#		Dr. Mateen Rizki of the Department of Computer Science 
-#		& Engineering, Wright State University - Dayton, Ohio, U.S.A.
+# template for this project.  Most comments stolen 
+# verbatum.  Statistical functions in Fxrandom are a
+# Python implementation of Dr. Peterson's Java 
+# implementation of a C++ random generator written by 
+# Dr. Mateen Rizki of the Department of Computer Science 
+# & Engineering, Wright State University - Dayton, Ohio, U.S.A.
 ##################################################
 
 #!/usr/bin/python
@@ -31,7 +31,7 @@ class test:
 				test = Graph(x, cnn)
 				solution = test.greedySolution()
 				sol = solution.set.count(True)/float(len(solution.set))
-				print "%i verticies with %.2f connectivity, solution percentage: %.2f"%(x, cnn, sol)
+				print "%i vertices with %.2f connectivity, solution percentage: %.2f"%(x, cnn, sol)
 
 ### Vertex Set Class ###
 
@@ -50,13 +50,13 @@ class VSet:
 				""" Initializes all vertices to False """
 				self.set = [False for i in range(size)]
 		self.fitness = -1.0 #means "unknown"
-		
+	
 	def toggleVertex(self, i):
 		""" Toggle whether a vertex at the given index is included in the set or not """
 		self.set[i] = not self.set[i]
 	
 	def total(self):
-		""" Returns the number of verticies in this set """
+		""" Returns the number of vertices in this set """
 		return self.set.count(True)
 	
 	def pagePrint(self):
@@ -74,7 +74,19 @@ class VSet:
 	
 	def __setitem__(self, key, value):
 		self.set[key] = value
-
+	
+	@classmethod
+	def lexSet(cls, lexIndex, size):
+		""" Generate's the [lexIndex]th lexicographical set of vertices of size [size] """
+		# Check to make sure the value passed is a valid lexicographical index
+		if lexIndex < 0 or lexIndex > (2**size)-1:
+			raise ValueError("Lexicographical index must be between 0 & (2**size)-1")
+		
+		# Generate the set by converting a number to binary, filling it to the 
+		# correct size, and converting the resultant bits into boolean values
+		s = cls(size)
+		s.set = [ bool(int(x)) for x in bin(lexIndex).split('b')[1].zfill(size)]
+		return s
 
 ### Graph Class ###	
 
@@ -122,8 +134,8 @@ class Graph:
 			#print self.adjMatrix[i]
 	
 	def checkEdgePresent(self, v1, v2):
-		""" Returns true if an edge exists between the two verticies, false otherwise or if invalid """
-		# Check legality of verticies
+		""" Returns true if an edge exists between the two vertices, false otherwise or if invalid """
+		# Check legality of vertices
 		if (v1 < 0) or (v2 < 0) or (v1 >= self.sizeN) or (v2 >= self.sizeN): 
 			return False
 		return self.adjMatrix[v1][v2]
@@ -152,29 +164,15 @@ class Graph:
 		self.setFitness(vs)
 		return vs
 	
-	def lexSet(self, lexIndex):
-		""" Generate's the [lexIndex]th lexicographical set of all possible sets of verticies """
-		# Check to make sure the value passed is a valid lexicographical index
-		if lexIndex < 0 or lexIndex > (2**self.sizeN)-1:
-			raise ValueError("Lexicographical index must be between 0 & (2**Graph.sizeN)-1")
-		
-		# Generate the set by converting a number to binary, filling it to the 
-		# correct size, and converting the resultant bits into boolean values
-		s = VSet(self.sizeN)
-		s.set = [ bool(int(x)) for x in bin(lexIndex).split('b')[1].zfill(self.sizeN)]
-		return s
-	
 	def exhaustiveSolution(self):
-		""" Generate the biggest possible independent set of verticies by testing all possibilities """
+		""" Generate the biggest possible independent set of vertices by testing all possibilities """
 		maxScore = 0
 		maxIndex = -1
 		for i in range(1, (2**self.sizeN)):
-			curScore = self.evaluateSet( self.lexSet(i) )
+			curScore = self.evaluateSet( VSet.lexSet(i, self.sizeN) )
 			if curScore > maxScore:
 				maxIndex = i
-		vs = self.lexSet(maxIndex)
-		self.setFitness(vs)
-		return vs
+		return VSet.lexSet(maxIndex, self.sizeN)
 
 	def rouletteSelection(self, popsel, popnumber):
 		"""	Stochastic Sampling (Roulette wheel) method of selecting parents
