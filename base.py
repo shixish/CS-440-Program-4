@@ -49,6 +49,7 @@ class VSet:
 			else:
 				""" Initializes all vertices to False """
 				self.set = [False for i in range(size)]
+		self.fitness = -1.0 #means "unknown"
 		
 	def toggleVertex(self, i):
 		""" Toggle whether a vertex at the given index is included in the set or not """
@@ -65,13 +66,8 @@ class VSet:
 			if ((i+1)%50==0):
 				print "" 
 	
-	def consume(self, other):
-		""" Used in the mating process of the GA. 
-			Consumes another VSet's values by randomly selecting it's own value or that of the other set """
-		self.set = [self.set[i] if self.rand.boolBernoulli(.5) else other.set[i] for i,v in enumerate(self.set)]
-	
 	def __repr__(self):
-		return "Vertex set: " + str(self.set)
+		return "Vertex set: %s\nFitness: %.3f"%(self.set, self.fitness)
 		
 	def __getitem__(self, key):
 		return self.set[key]
@@ -153,7 +149,7 @@ class Graph:
 			vs.toggleVertex(v[0])
 			if self.evaluateSet(vs) == -1:
 				vs.toggleVertex(v[0])
-		
+		self.setFitness(vs)
 		return vs
 	
 	def lexSet(self, lexIndex):
@@ -168,7 +164,7 @@ class Graph:
 		s.set = [ bool(int(x)) for x in bin(lexIndex).split('b')[1].zfill(self.sizeN)]
 		return s
 	
-	def exsaustiveSolution(self):
+	def exhaustiveSolution(self):
 		""" Generate the biggest possible independent set of verticies by testing all possibilities """
 		maxScore = 0
 		maxIndex = -1
@@ -176,7 +172,9 @@ class Graph:
 			curScore = self.evaluateSet( self.lexSet(i) )
 			if curScore > maxScore:
 				maxIndex = i
-		return self.lexSet(maxIndex)
+		vs = self.lexSet(maxIndex)
+		self.setFitness(vs)
+		return vs
 
 	def rouletteSelection(self, popsel, popnumber):
 		"""	Stochastic Sampling (Roulette wheel) method of selecting parents
@@ -207,12 +205,12 @@ class Graph:
 		#initialize the population
 		for i in range(popsize):
 			s = VSet(self.sizeN, random=self.rand, percentage=percentage)
-			s.rank = self.setFitness(s)
-			total += s.rank
+			self.setFitness(s)
+			total += s.fitness
 			population.append(s)
 		
 		for p in population:
-			p.rank/=total
+			p.rank = p.fitness/total
 			
 		print "Average before: %.2f"%(total/popsize)
 		
@@ -225,12 +223,12 @@ class Graph:
 			females = self.rouletteSelection(population, popsize)
 			for i in range(popsize):
 				s = self.combine(population[males[i]], population[females[i]])
-				s.rank = self.setFitness(s)
-				total += s.rank
+				self.setFitness(s)
+				total += s.fitness
 				population[i] = s
 			
 			for p in population:
-				p.rank/=total
+				p.rank = p.fitness/total
 		
 			#population = [VSet(self.sizeN, random=self.rand) for i in range(popsize)]
 			#for i, s in enumerate(siblings):
@@ -243,6 +241,7 @@ class Graph:
 			#print "%i: %.1f %s"%(i,s.rank, s)
 		
 		print "Average after: %.2f"%(total/popsize)
+		return max(population, key=lambda s:s.rank)
 	
 	
 	def setFitness(self, vset):
@@ -257,7 +256,9 @@ class Graph:
 					if set[j] and self.adjMatrix[i][j]:
 						connections+=1
 				setSize+=1
-		return (setSize*setSize)-(connections*connections)
+		fitness = (setSize*setSize)-(connections*connections)
+		vset.fitness = fitness
+		return fitness
 	
 	def evaluateSet(self, vset):
 		""" Test to see if a passed set is independent, if yes, size of set is returned, -1 elsewise """
