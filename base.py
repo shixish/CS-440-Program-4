@@ -163,6 +163,28 @@ class Graph:
 		
 		return vs
 	
+	def lexSet(self, lexIndex):
+		""" Generate's the [lexIndex]th lexicographical set of all possible sets of verticies """
+		# Check to make sure the value passed is a valid lexicographical index
+		if lexIndex < 0 or lexIndex > (2**self.sizeN)-1:
+			raise ValueError("Lexicographical index must be between 0 & (2**Graph.sizeN)-1")
+		
+		# Generate the set by converting a number to binary, filling it to the 
+		# correct size, and converting the resultant bits into boolean values
+		s = VSet(self.sizeN)
+		s.set = [ bool(int(x)) for x in bin(lexIndex).split('b')[1].zfill(self.sizeN)]
+		return s
+	
+	def exsaustiveSolution(self):
+		""" Generate the biggest possible independent set of verticies by testing all possibilities """
+		maxScore = 0
+		maxIndex = -1
+		for i in range(1, (2**self.sizeN)):
+			curScore = self.evaluateSet( self.lexSet(i) )
+			if curScore > maxScore:
+				maxIndex = i
+		return self.lexSet(maxIndex)
+	
 	def setFitness(self, vset):
 		""" Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 """
 		# Skip error test and assume len(set) == sizeN for quickness of algorithm
