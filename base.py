@@ -110,8 +110,46 @@ class Graph:
           
           size -- Number of vertices in the graph.
           cnn  -- Connectivity of the graph.
-          seed -- Random number generator seed (default 0)."""
+          seed -- Random number generator seed (default 0).   testcase -- If you want the test case graph, set this to true.
+          testcase -- Set to true for the 4x4 static test case
+        >>> g = Graph(4,1,1,True) # test case graph generation
         
+        >>> g
+        Adjacency Matrix: 
+        0    0    1    0    
+        <BLANKLINE>
+        0    0    1    0    
+        <BLANKLINE>
+        1    1    0    1    
+        <BLANKLINE>
+        0    0    1    0    
+        <BLANKLINE>
+        <BLANKLINE>
+        
+        
+        """
+        # Perform error checking
+        if testcase == True:
+            self.adjMatrix = [ [ False for j in range(4) ] for i in range(4) ]
+            self.adjMatrix[0][0] = False 
+            self.adjMatrix[0][1] = False
+            self.adjMatrix[0][2] = True
+            self.adjMatrix[0][3] = False
+            self.adjMatrix[1][0] = False
+            self.adjMatrix[1][1] = False
+            self.adjMatrix[1][2] = True
+            self.adjMatrix[1][3] = False
+            self.adjMatrix[2][0] = True
+            self.adjMatrix[2][1] = True
+            self.adjMatrix[2][2] = False
+            self.adjMatrix[2][3] = True
+            self.adjMatrix[3][0] = False
+            self.adjMatrix[3][1] = False
+            self.adjMatrix[3][2] = True
+            self.adjMatrix[3][3] = False
+            self.rand = Fxrandom(seed)
+            self.sizeN = 4
+            
         # Perform error checking
         if size <= 0:
             raise ValueError("Graph Init: size must be > 0.")
@@ -121,23 +159,26 @@ class Graph:
             raise ValueError("Graph Init: seed must be >= 0.")
         
         # Define class variables
-        self.cnn = cnn
-        self.sizeN = size
-        self.rand = Fxrandom(seed)
-        print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
+        if not testcase:
+            self.cnn = cnn
+            self.sizeN = size
+            self.rand = Fxrandom(seed)
+            print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
         
         # Instantiate the class's adjacency matrix to all False values
-        self.adjMatrix = [ [False for j in range(self.sizeN) ] for i in range(self.sizeN) ]
+        if not testcase:
+            self.adjMatrix = [ [False for j in range(self.sizeN) ] for i in range(self.sizeN) ]
         
         # Initialize edges according to a weighted coin flip.
         # if cnn = 0.1, there will be a 10% chance of creating an edge
         # between vertices i and j.  Note that there will never be an
         # edge between a vertex and itself.
-        for i in range(self.sizeN):
-            for j in range(i+1, self.sizeN):
-                self.adjMatrix[i][j] = self.adjMatrix[j][i] = self.rand.boolBernoulli(cnn)
-            # Debug code
-            #print self.adjMatrix[i]
+        if not testcase:
+            for i in range(self.sizeN):
+                for j in range(i+1, self.sizeN):
+                    self.adjMatrix[i][j] = self.adjMatrix[j][i] = self.rand.boolBernoulli(cnn)
+                # Debug code
+                #print self.adjMatrix[i]
     
     def checkEdgePresent(self, v1, v2):
         """ Returns true if an edge exists between the two vertices, false otherwise or if invalid """
@@ -171,7 +212,14 @@ class Graph:
         return vs
     
     def exhaustiveSolution(self):
-        """ Generate the biggest possible independent set of vertices by testing all possibilities """
+        """ Generate the biggest possible independent set of vertices by testing all possibilities 
+        
+        >>> g = Graph(4,1,1,True)
+
+        >>> g.exsaustiveSolution()
+        Vertex set: 
+        [True, True, False, True]
+        """
         maxScore = 0
         maxIndex = -1
         for i in range(1, (2**self.sizeN)):
