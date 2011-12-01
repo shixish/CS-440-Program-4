@@ -7,13 +7,13 @@
 #				: Perkins, J.
 #				: Wessels, A.
 #
-#		Python implementaion of Dr. Peterson's 
-#	template for this project.  Most comments stolen 
-#	verbatum.  Statistical functions in Fxrandom are a
+#	Python implementaion of Dr. Peterson's 
+#		template for this project.  Most comments stolen 
+#		verbatum.  Statistical functions in Fxrandom are a
 #   Python implementation of Dr. Peterson's Java 
-#	implementation of a C++ random generator written by 
-#	Dr. Mateen Rizki of the Department of Computer Science 
-#	& Engineering, Wright State University - Dayton, Ohio, U.S.A.
+#		implementation of a C++ random generator written by 
+#		Dr. Mateen Rizki of the Department of Computer Science 
+#		& Engineering, Wright State University - Dayton, Ohio, U.S.A.
 ##################################################
 
 #!/usr/bin/python
@@ -22,6 +22,31 @@ import sys
 import datetime
 import math
 
+#throwaway test class
+class test:
+	def __init__(self):
+		for y in range(1,10):
+			cnn = y/10.0
+			for x in range(2,30):	
+				test = Graph(x, cnn)
+				solution = test.greedySolution()
+				count = 0.0;
+				for i,b in enumerate(solution.set):
+					if (solution.set[i]):
+						count += 1.0
+				sol = count/len(solution.set)
+				#if sol > .5:
+				#	print test
+				#	print solution.set
+				print "%i verticies with %.2f connectivity, solution percentage: %.2f"%(x, cnn, sol)
+				#print "Solution percentage: %.2f"%()
+	
+	def realConnectivity(self, vector):
+		count = 0.0;
+		for i in vector:
+			if (vector[i]):
+				count += 1.0
+		return count/len(vector)
 
 ### Vertex Set Class ###
 
@@ -30,6 +55,7 @@ class VSet:
 	
 	def __init__(self, size):
 		""" Constructor for vertex set, accepts size and initializes all vertices to False """
+		self.sizeN = size
 		self.set = [False for i in range(size)]
 		
 	def toggleVertex(self, i):
@@ -46,6 +72,20 @@ class VSet:
 			sys.stdout.write("1") if self.set[i] else sys.stdout.write("0")
 			if ((i+1)%50==0):
 				print "" 
+	
+	def __repr__(self):
+		return "Vertex set: \n" + str(self.set)
+		
+	def __getitem__(self, key):
+		return self.set[key]
+	
+	def __setitem__(self, key, value):
+		self.set[key] = value
+	
+	def randomSolution(self, cnn = .2):
+		rand = Fxrandom(seed)
+		for i in range(self.sizeN):
+			self.set[i] = rand.boolBernoulli(cnn)
 
 
 ### Graph Class ###	
@@ -90,7 +130,7 @@ class Graph:
 			for j in range(i+1, self.sizeN):
 				self.adjMatrix[i][j] = self.adjMatrix[j][i] = self.rand.boolBernoulli(cnn)
 			# Debug code
-			print self.adjMatrix[i]
+			#print self.adjMatrix[i]
 	
 	def checkEdgePresent(self, v1, v2):
 		""" Returns true if an edge exists between the two verticies, false otherwise or if invalid """
@@ -118,7 +158,7 @@ class Graph:
 		# If the vector breaks the set, toggle it back.
 		for v in vrank:
 			vs.toggleVertex(v[0])
-			if g.evaluateSet(vs) == -1:
+			if self.evaluateSet(vs) == -1:
 				vs.toggleVertex(v[0])
 		
 		return vs
@@ -156,7 +196,20 @@ class Graph:
 		if independent:
 			return setSize
 		return -1
-
+	
+	def Genetic(self, population=100, generations=50):
+		siblings = [VSet(self.sizeN).randomSolution() for i in range(population)]
+		print siblings
+		#for (g in range(generations)):
+		
+	def __repr__(self):
+		ret = "Adjacency Matrix: \n"
+		for i,l in enumerate(self.adjMatrix):
+			for j,v in enumerate(self.adjMatrix[i]):
+				ret += "%i    "%self.adjMatrix[i][j]
+			ret += "\n\n"
+		return ret #str(self.adjMatrix)
+		
 
 ### Statistics class ###
 
