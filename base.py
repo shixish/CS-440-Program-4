@@ -30,33 +30,25 @@ class test:
 			for x in range(2,30):	
 				test = Graph(x, cnn)
 				solution = test.greedySolution()
-				count = 0.0;
-				for i,b in enumerate(solution.set):
-					if (solution.set[i]):
-						count += 1.0
-				sol = count/len(solution.set)
-				#if sol > .5:
-				#	print test
-				#	print solution.set
+				sol = solution.set.count(True)/float(len(solution.set))
 				print "%i verticies with %.2f connectivity, solution percentage: %.2f"%(x, cnn, sol)
-				#print "Solution percentage: %.2f"%()
-	
-	def realConnectivity(self, vector):
-		count = 0.0;
-		for i in vector:
-			if (vector[i]):
-				count += 1.0
-		return count/len(vector)
 
 ### Vertex Set Class ###
 
 class VSet:
 	""" A class representing a list of vertices in a graph """
 	
-	def __init__(self, size):
-		""" Constructor for vertex set, accepts size and initializes all vertices to False """
-		self.sizeN = size
-		self.set = [False for i in range(size)]
+	def __init__(self, size, random=None, percentage=.2):
+		if type(size) is list: #allows me to initialize a VSet with a list...
+			self.set = size
+		else:
+			""" Constructor for vertex set, accepts size, Fxrandom object (opt), and True/False density as percentage (opt) """
+			if random and random.boolBernoulli:
+				#rand = Fxrandom(seed)
+				self.set = [random.boolBernoulli(percentage) for i in range(size)]
+			else:
+				""" Initializes all vertices to False """
+				self.set = [False for i in range(size)]
 		
 	def toggleVertex(self, i):
 		""" Toggle whether a vertex at the given index is included in the set or not """
@@ -73,19 +65,19 @@ class VSet:
 			if ((i+1)%50==0):
 				print "" 
 	
+	def consume(self, other):
+		""" Used in the mating process of the GA. 
+			Consumes another VSet's values by randomly selecting it's own value or that of the other set """
+		self.set = [self.set[i] if self.rand.boolBernoulli(.5) else other.set[i] for i,v in enumerate(self.set)]
+	
 	def __repr__(self):
-		return "Vertex set: \n" + str(self.set)
+		return "Vertex set: " + str(self.set)
 		
 	def __getitem__(self, key):
 		return self.set[key]
 	
 	def __setitem__(self, key, value):
 		self.set[key] = value
-	
-	def randomSolution(self, cnn = .2):
-		rand = Fxrandom(seed)
-		for i in range(self.sizeN):
-			self.set[i] = rand.boolBernoulli(cnn)
 
 
 ### Graph Class ###	
@@ -118,6 +110,7 @@ class Graph:
 		# Define class variables
 		self.sizeN = size
 		self.rand = Fxrandom(seed)
+		print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
 		
 		# Instantiate the class's adjacency matrix to all False values
 		self.adjMatrix = [ [False for j in range(self.sizeN) ] for i in range(self.sizeN) ]
@@ -184,6 +177,73 @@ class Graph:
 			if curScore > maxScore:
 				maxIndex = i
 		return self.lexSet(maxIndex)
+
+	def rouletteSelection(self, popsel, popnumber):
+		"""	Stochastic Sampling (Roulette wheel) method of selecting parents
+			Source: http://www.cse.unr.edu/~banerjee/selection.htm """
+		choice = [ ]
+		k=0
+		while (k < popnumber):
+		    partsum = 0
+		    parent = 0
+		    randnum = self.rand.uniform(0.0,1.0)
+		    for i in range(0, popnumber):
+		        partsum += popsel[i].rank
+		        #print "%s %s"%(i, popsel[i].rank)
+		        if partsum >= randnum:
+		            parent = i
+		            break
+		    k+=1
+		    choice.append(parent)
+		return choice
+		
+	def combine(self, group1, group2):
+		return VSet([group1[i] if self.rand.boolBernoulli(.5) else group2[i] for i,v in enumerate(group1)])
+		
+	def GASolution(self, popsize=100, generations=50, percentage=.10):
+		""" Finds an independent set using a Genetic Algorithm """
+		population = []
+		total = 0.0
+		#initialize the population
+		for i in range(popsize):
+			s = VSet(self.sizeN, random=self.rand, percentage=percentage)
+			s.rank = self.setFitness(s)
+			total += s.rank
+			population.append(s)
+		
+		for p in population:
+			p.rank/=total
+			
+		print "Average before: %.2f"%(total/popsize)
+		
+		for g in range(generations):
+			total = 0.0
+			#population = sorted(population, key=lambda s: s.rank, reverse=True)
+			#maxrank = float(max(population, key=lambda s:s.rank).rank)
+			
+			males = self.rouletteSelection(population, popsize)
+			females = self.rouletteSelection(population, popsize)
+			for i in range(popsize):
+				s = self.combine(population[males[i]], population[females[i]])
+				s.rank = self.setFitness(s)
+				total += s.rank
+				population[i] = s
+			
+			for p in population:
+				p.rank/=total
+		
+			#population = [VSet(self.sizeN, random=self.rand) for i in range(popsize)]
+			#for i, s in enumerate(siblings):
+			#	s.rank = self.evaluateSet(s)
+		
+		
+		
+		#for i,s in enumerate(population):
+		#	print "%i: %.8f"%(i,s.rank)
+			#print "%i: %.1f %s"%(i,s.rank, s)
+		
+		print "Average after: %.2f"%(total/popsize)
+	
 	
 	def setFitness(self, vset):
 		""" Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 """
@@ -218,11 +278,6 @@ class Graph:
 		if independent:
 			return setSize
 		return -1
-	
-	def GASolution(self, population=100, generations=50):
-		siblings = [VSet(self.sizeN).randomSolution() for i in range(population)]
-		print siblings
-		#for (g in range(generations)):
 		
 	def __repr__(self):
 		ret = "Adjacency Matrix: \n"
