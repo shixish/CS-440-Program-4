@@ -1,4 +1,5 @@
 ##################################################
+<<<<<<< HEAD
 #    Non-contiguous Graph Solver
 #    Assignment 4 - CS 440 @ UH Hilo
 #
@@ -8,6 +9,17 @@
 #            : Wessels, A.
 #
 #    Python implementaion of Dr. Peterson's 
+=======
+#   Non-contiguous Graph Solver
+#   Assignment 4 - CS 440 @ UH Hilo
+#
+#   Professor   : Dr. M. Peterson
+#   Students    : Cunnyngham, I.
+#           : Perkins, J.
+#           : Wessels, A.
+#
+#   Python implementaion of Dr. Peterson's 
+>>>>>>> b61ecf8516d49fa16b89de5080e28c44e0ba229c
 # template for this project.  Most comments stolen 
 # verbatum.  Statistical functions in Fxrandom are a
 # Python implementation of Dr. Peterson's Java 
@@ -58,10 +70,11 @@ class VSet:
     def total(self):
         """ Returns the number of vertices in this set """
         return self.set.count(True)
-        
+
     def density(self):
         """ Returns the percentage of true values in the set """
         return self.total()/float(len(self.set))
+
     
     def pagePrint(self):
         """ Prints the members of this set as 1s(included) and 0s(excluded) grouped in sets of 50 """
@@ -93,11 +106,10 @@ class VSet:
         return s
 
 ### Graph Class ###    
-
 class Graph:
     """ A class representing a undirected graph with random connectivity """
     
-    def __init__(self, size, cnn, seed=0):
+    def __init__(self, size, cnn, seed=0, testcase=False):
         """  This is the public constructor for the graph class.  
         
           Size is the number
@@ -232,7 +244,6 @@ class Graph:
         if not density:
             density = self.greedySolution().density()*.25
             print "Using density: %.5f"%density
-        
         population = []
         total = 0.0
         #initialize the population
@@ -287,7 +298,6 @@ class Graph:
     def setFitness(self, vset):
         """ Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 """
         # Skip error test and assume len(set) == sizeN for quickness of algorithm
-        # We may be able to merge this
         set = vset.set
         
         setSize = connections = 0
@@ -369,3 +379,7 @@ class Fxrandom:
         if(num <= probability):
             return True
         return False
+
+if __name__=="__main__":
+    import doctest
+    doctest.testmod()
