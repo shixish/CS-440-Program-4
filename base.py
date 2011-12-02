@@ -366,6 +366,7 @@ class Graph:
         """ Test the fitness of a passed set: fitness= [set size] - 4*[connections] 
         
         These are just fake values for what maybe we might want
+
         >>> g = Graph(4,1,1,True)
 
         >>> g.setFitness4([1,1,0,1]) # "perfect" score: so fit, so clean
@@ -395,7 +396,7 @@ class Graph:
                     if set[j] and self.adjMatrix[i][j]:
                         connections+=1
                 setSize+=1
-        fitness = float(setSize)-(2*connections)
+        fitness = float(setSize)-(4*connections)
         if fitness < 0: #i need the fitness to remain in the positives...
             fitness = -1/fitness
         return fitness
