@@ -51,6 +51,11 @@ class VSet:
                 """ Initializes all vertices to False """
                 self.set = [False for i in range(size)]
         self.fitness = -1.0 #means "unknown"
+        
+    """ TODO:: implement new constructor just accepts a list, rely on "empty" and "rand" functions defined below for other functionality """
+    #def __init__(self, data):
+    #    self.set = data
+    #    self.fitness = -1.0 #means "unknown"
     
     def toggleVertex(self, i):
         """ Toggle whether a vertex at the given index is included in the set or not """
@@ -81,6 +86,14 @@ class VSet:
     def __setitem__(self, key, value):
         self.set[key] = value
     
+    def empty(self, size=None):
+        self.set = [False for i in range(size)]
+        return self
+        
+    def rand(self, size, random, density=.2):
+        self.set = [random.boolBernoulli(density) for i in range(size)]
+        return self
+        
     @classmethod
     def lexSet(cls, lexIndex, size):
         """ Generate's the [lexIndex]th lexicographical set of vertices of size [size] """
