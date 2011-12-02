@@ -39,18 +39,10 @@ class test:
 class VSet:
     """ A class representing a list of vertices in a graph """
     
-    def __init__(self, size, random=None, density=.2):
-        if type(size) is list: #allows me to initialize a VSet with a list...
-            self.set = size
-        else:
-            """ Constructor for vertex set, accepts size, Fxrandom object (opt), and True/False density (opt) """
-            if random and random.boolBernoulli:
-                #rand = Fxrandom(seed)
-                self.set = [random.boolBernoulli(density) for i in range(size)]
-            else:
-                """ Initializes all vertices to False """
-                self.set = [False for i in range(size)]
-        self.fitness = -1.0 #means "unknown"
+    def __init__(self, set=[])
+        """ Constructure for VSet, accepts an array of bools as default value of self.set """
+        self.set = set
+        self.fitness = -1.0
     
     def toggleVertex(self, i):
         """ Toggle whether a vertex at the given index is included in the set or not """
@@ -81,17 +73,25 @@ class VSet:
         self.set[key] = value
     
     @classmethod
+    def emptySet(cls, size):
+        """ Returns an empty set (all False valued) of [size] """
+        return cls( [False for i in range(size)] )
+    
+    @classmethod
     def lexSet(cls, lexIndex, size):
-        """ Generate's the [lexIndex]th lexicographical set of vertices of size [size] """
+        """ Generate's the [lexIndex]th lexicographical set of vertices of [size] """
         # Check to make sure the value passed is a valid lexicographical index
         if lexIndex < 0 or lexIndex > (2**size)-1:
             raise ValueError("Lexicographical index must be between 0 & (2**size)-1")
         
         # Generate the set by converting a number to binary, filling it to the 
         # correct size, and converting the resultant bits into boolean values
-        s = cls(size)
-        s.set = [ bool(int(x)) for x in bin(lexIndex).split('b')[1].zfill(size)]
-        return s
+        return cls( [ bool(int(x)) for x in bin(lexIndex).split('b')[1].zfill(size)] )
+    
+    @classmethod
+    def randomSet(size, density=.2):
+        """ Generates a random set, where individual vertex inclusion has [density] probability """
+        return cls( [random.boolBernoulli(density) for i in range(size)] )
 
 ### Graph Class ###    
 
