@@ -192,7 +192,15 @@ class Graph:
         return self.adjMatrix[v1][v2]
     
     def greedySolution(self):
-        """ Finds an independent set using a greedy solution """
+        """ 
+        Finds an independent set using a greedy solution 
+        
+        >>> g = Graph(4,1,1,True)
+
+        >>> g.greedySolution()
+        Vertex set: [True, True, False, True]
+        Fitness: 9.000
+        """
         # Initialize an empty set
         vs = VSet(self.sizeN)
         
@@ -216,9 +224,9 @@ class Graph:
         
         >>> g = Graph(4,1,1,True)
 
-        >>> g.exsaustiveSolution()
-        Vertex set: 
-        [True, True, False, True]
+        >>> g.exhaustiveSolution()
+        Vertex set: [True, True, False, True]
+        Fitness: 9.000
         """
         maxScore = 0
         maxIndex = -1
@@ -226,7 +234,9 @@ class Graph:
             curScore = self.evaluateSet( VSet.lexSet(i, self.sizeN) )
             if curScore > maxScore:
                 maxIndex = i
-        return VSet.lexSet(maxIndex, self.sizeN)
+        vs = VSet.lexSet(maxIndex, self.sizeN)
+        self.setFitness(vs)
+        return vs
 
     def rouletteSelection(self, popsel, popnumber):
         """    Stochastic Sampling (Roulette wheel) method of selecting parents
@@ -282,7 +292,7 @@ class Graph:
             density = self.greedySolution().density()*.25
             print "Using density: %.5f"%density
         population = []
-        total = 0.0t
+        total = 0.0
         #initialize the population
         for i in range(popsize):
             s = VSet(self.sizeN, random=self.rand, density=density)
