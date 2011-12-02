@@ -284,8 +284,10 @@ class Graph:
     def combine(self, group1, group2, mutation):
         return VSet( [self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i,v in enumerate(group1)] )
     
-    def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0):
+    def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0, fitFunc=None):
         """ Finds an independent set using a Genetic Algorithm """
+        if fitFunc == None:
+            fitFunc = self.setFitness
         if not density:
             density = self.greedySolution().density()*.25
             print "Using density: %.5f"%density
@@ -294,7 +296,7 @@ class Graph:
         #initialize the population
         for i in range(popsize):
             s = VSet.randomSet(self.sizeN, self.rand, density)
-            self.setFitness(s)
+            s.fitness = fitFunc(s)
             total += s.fitness
             population.append(s)
         
@@ -320,7 +322,7 @@ class Graph:
             total = 0.0
             for i in range(randpop):
                 s = self.combine(population[males[i]], population[females[i]], mutation=mutation)
-                self.setFitness(s)
+                s.fitness = fitFunc(s)
                 total += s.fitness
                 population[preserve+i] = s
         
@@ -353,7 +355,6 @@ class Graph:
         fitness = float(setSize*setSize)-(connections*connections)
         if fitness < 0: #i need the fitness to remain in the positives...
             fitness = -1/fitness
-        set.fitness = fitness
         return fitness
     
     def evaluateSet(self, set):
