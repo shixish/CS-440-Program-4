@@ -372,6 +372,26 @@ class Graph:
             fitness = -1/fitness
         return fitness
     
+    def triangleFitness(self, set):
+        """ Fitness= for i vertexes: sum( [tri] || - 1.5*[tri]).  [tri] = triangle number of ith vertex """
+        # Skip error test and assume len(set) == sizeN for quickness of algorithm
+        setSize = fitness = 0
+        ind = True
+        for i in range(self.sizeN):
+            if set[i] :
+                for j in range(i+1, self.sizeN):
+                    if set[j] and self.adjMatrix[i][j]:
+                        ind = False
+                        break
+                if ind:
+                    fitness+=setSize
+                else:
+                    fitness-=1.5*setSize
+                setSize+=1
+        if fitness < 0: #i need the fitness to remain in the positives...
+            fitness = -1/fitness
+        return fitness
+    
     def evaluateSet(self, set):
         """ Test to see if a passed set is independent, if yes, size of set is returned, -1 elsewise """
         # Skip error test and assume len(set) == sizeN for quickness of algorithm
