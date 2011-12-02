@@ -39,7 +39,7 @@ class test:
 class VSet:
     """ A class representing a list of vertices in a graph """
     
-    def __init__(self, set=[])
+    def __init__(self, set=[]):
         """ Constructure for VSet, accepts an array of bools as default value of self.set """
         self.set = set
         self.fitness = -1.0
@@ -89,7 +89,7 @@ class VSet:
         return cls( [ bool(int(x)) for x in bin(lexIndex).split('b')[1].zfill(size)] )
     
     @classmethod
-    def randomSet(size, density=.2):
+    def randomSet(cls, size, random, density=.2):
         """ Generates a random set, where individual vertex inclusion has [density] probability """
         return cls( [random.boolBernoulli(density) for i in range(size)] )
 
@@ -98,7 +98,7 @@ class VSet:
 class Graph:
     """ A class representing a undirected graph with random connectivity """
     
-    def __init__(self, size, cnn, seed=0):
+    def __init__(self, size, cnn, seed=0, testcase=False):
         """  This is the public constructor for the graph class.  
         
           Size is the number
@@ -194,7 +194,7 @@ class Graph:
     def greedySolution(self):
         """ Finds an independent set using a greedy solution """
         # Initialize an empty set
-        vs = VSet(self.sizeN)
+        vs = VSet.emptySet(self.sizeN)
         
         # Rank the vertexes by their connectedness
         vrank = []
@@ -223,8 +223,7 @@ class Graph:
         maxScore = 0
         maxIndex = -1
         for i in range(1, (2**self.sizeN)):
-            curScore = self.evaluateSet( VSet.lexSet(i, self.sizeN) )
-            if curScore > maxScore:
+            if self.evaluateSet( VSet.lexSet(i, self.sizeN) ) > maxScore:
                 maxIndex = i
         return VSet.lexSet(maxIndex, self.sizeN)
 
@@ -274,7 +273,7 @@ class Graph:
         return not value if self.rand.boolBernoulli(rate) else value
         
     def combine(self, group1, group2, mutation):
-        return VSet([self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i,v in enumerate(group1)])
+        return VSet( [self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i,v in enumerate(group1)] )
         
     def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0):
         """ Finds an independent set using a Genetic Algorithm """
@@ -286,7 +285,7 @@ class Graph:
         total = 0.0
         #initialize the population
         for i in range(popsize):
-            s = VSet(self.sizeN, random=self.rand, density=density)
+            s = VSet.randomSet(self.sizeN, self.rand, density)
             self.setFitness(s)
             total += s.fitness
             population.append(s)
@@ -317,7 +316,7 @@ class Graph:
                 total += s.fitness
                 population[preserve+i] = s
         
-            #population = [VSet(self.sizeN, random=self.rand) for i in range(popsize)]
+            #population = [VSet.randomSet(self.sizeN, self.rand) for i in range(popsize)]
             #for i, s in enumerate(siblings):
             #    s.rank = self.evaluateSet(s)
             
@@ -333,12 +332,10 @@ class Graph:
         print "Best: %.2f"%(best.fitness)
         return best
     
-    def setFitness(self, vset):
+    def setFitness(self, set):
         """ Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 """
         # Skip error test and assume len(set) == sizeN for quickness of algorithm
         # We may be able to merge this
-        set = vset.set
-        
         setSize = connections = 0
         for i in range(self.sizeN):
             if set[i] :
@@ -349,14 +346,12 @@ class Graph:
         fitness = float(setSize*setSize)-(connections*connections)
         if fitness < 0: #i need the fitness to remain in the positives...
             fitness = -1/fitness
-        vset.fitness = fitness
+        set.fitness = fitness
         return fitness
     
-    def evaluateSet(self, vset):
+    def evaluateSet(self, set):
         """ Test to see if a passed set is independent, if yes, size of set is returned, -1 elsewise """
         # Skip error test and assume len(set) == sizeN for quickness of algorithm
-        set = vset.set
-        
         setSize = 0
         independent = True
         for i in range(self.sizeN):
