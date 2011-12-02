@@ -357,6 +357,21 @@ class Graph:
             fitness = -1/fitness
         return fitness
     
+    def setFitness4(self, set):
+        """ Test the fitness of a passed set: fitness= [set size] - 4*[connections] """
+        # Skip error test and assume len(set) == sizeN for quickness of algorithm
+        setSize = connections = 0
+        for i in range(self.sizeN):
+            if set[i] :
+                for j in range(i+1, self.sizeN):
+                    if set[j] and self.adjMatrix[i][j]:
+                        connections+=1
+                setSize+=1
+        fitness = float(setSize)-(4*connections)
+        if fitness < 0: #i need the fitness to remain in the positives...
+            fitness = -1/fitness
+        return fitness
+    
     def evaluateSet(self, set):
         """ Test to see if a passed set is independent, if yes, size of set is returned, -1 elsewise """
         # Skip error test and assume len(set) == sizeN for quickness of algorithm
