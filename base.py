@@ -366,6 +366,14 @@ class Graph:
         """ Test the fitness of a passed set: fitness= [set size] - 4*[connections] 
         
         These are just fake values for what maybe we might want
+        
+        Algorithm idea: fitness could start at 1 (empty set) then
+        1st unconnected: +2 (3)
+        2nd: +3 (6)
+        3rd: +4 (10)
+        4th: +5 (15) etc...
+        and when the member is found to be connected, score penalty of Nth + (Nth * 1.5)
+
 
         >>> g = Graph(4,1,1,True)
 
