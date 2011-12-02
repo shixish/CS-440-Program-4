@@ -1,15 +1,4 @@
 ##################################################
-<<<<<<< HEAD
-#    Non-contiguous Graph Solver
-#    Assignment 4 - CS 440 @ UH Hilo
-#
-#    Professor     : Dr. M. Peterson
-#    Students    : Cunnyngham, I.
-#            : Perkins, J.
-#            : Wessels, A.
-#
-#    Python implementaion of Dr. Peterson's 
-=======
 #   Non-contiguous Graph Solver
 #   Assignment 4 - CS 440 @ UH Hilo
 #
@@ -19,7 +8,6 @@
 #           : Wessels, A.
 #
 #   Python implementaion of Dr. Peterson's 
->>>>>>> b61ecf8516d49fa16b89de5080e28c44e0ba229c
 # template for this project.  Most comments stolen 
 # verbatum.  Statistical functions in Fxrandom are a
 # Python implementation of Dr. Peterson's Java 
@@ -245,7 +233,7 @@ class Graph:
             density = self.greedySolution().density()*.25
             print "Using density: %.5f"%density
         population = []
-        total = 0.0
+        total = 0.0t
         #initialize the population
         for i in range(popsize):
             s = VSet(self.sizeN, random=self.rand, density=density)
