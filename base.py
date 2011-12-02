@@ -51,11 +51,10 @@ class VSet:
     def total(self):
         """ Returns the number of vertices in this set """
         return self.set.count(True)
-
+    
     def density(self):
         """ Returns the percentage of true values in the set """
         return self.total()/float(len(self.set))
-
     
     def pagePrint(self):
         """ Prints the members of this set as 1s(included) and 0s(excluded) grouped in sets of 50 """
@@ -73,14 +72,6 @@ class VSet:
     def __setitem__(self, key, value):
         self.set[key] = value
     
-    def empty(self, size=None):
-        self.set = [False for i in range(size)]
-        return self
-        
-    def rand(self, size, random, density=.2):
-        self.set = [random.boolBernoulli(density) for i in range(size)]
-        return self
-        
     @classmethod
     def emptySet(cls, size):
         """ Returns an empty set (all False valued) of [size] """
@@ -289,10 +280,10 @@ class Graph:
         if rate == None:
             return value
         return not value if self.rand.boolBernoulli(rate) else value
-        
+    
     def combine(self, group1, group2, mutation):
         return VSet( [self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i,v in enumerate(group1)] )
-        
+    
     def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0):
         """ Finds an independent set using a Genetic Algorithm """
         if not density:
@@ -390,7 +381,7 @@ class Graph:
                 ret += "%i    "%self.adjMatrix[i][j]
             ret += "\n\n"
         return ret #str(self.adjMatrix)
-        
+    
 
 ### Statistics class ###
 
