@@ -343,7 +343,12 @@ class Graph:
         return best
     
     def setFitness(self, set):
-        """ Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 """
+        """ Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 
+        >>> g = Graph(4,1,1,True)
+
+        >>> vs = VSet([1,1,0,1])
+
+        """
         # Skip error test and assume len(set) == sizeN for quickness of algorithm
         setSize = connections = 0
         for i in range(self.sizeN):
@@ -358,7 +363,30 @@ class Graph:
         return fitness
     
     def setFitness4(self, set):
-        """ Test the fitness of a passed set: fitness= [set size] - 4*[connections] """
+        """ Test the fitness of a passed set: fitness= [set size] - 4*[connections] 
+        
+        These are just fake values for what maybe we might want
+        >>> g = Graph(4,1,1,True)
+
+        >>> g.setFitness4([1,1,0,1]) # "perfect" score: so fit, so clean
+        10
+
+        >>> g.setFitness4([1,1,1,1]) # one-too-many connected (nearly fit)
+        8
+
+        >>> g.setFitness4([1,0,0,1]) # could be better
+        6
+
+        >>> g.setFitness4([1,1,0,0]) # same as above
+        6
+
+        >>> g.setFitness4([0,0,0,1]) # so wrong
+        3
+
+        >>> g.setFitness4([0,0,0,0]) # wtf
+        1
+
+        """
         # Skip error test and assume len(set) == sizeN for quickness of algorithm
         setSize = connections = 0
         for i in range(self.sizeN):
@@ -367,7 +395,7 @@ class Graph:
                     if set[j] and self.adjMatrix[i][j]:
                         connections+=1
                 setSize+=1
-        fitness = float(setSize)-(4*connections)
+        fitness = float(setSize)-(2*connections)
         if fitness < 0: #i need the fitness to remain in the positives...
             fitness = -1/fitness
         return fitness
