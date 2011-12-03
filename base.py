@@ -347,6 +347,7 @@ class Graph:
         >>> g = Graph(4,1,1,True)
 
         >>> vs = VSet([1,1,0,1])
+        something_happened!
 
         """
         # Skip error test and assume len(set) == sizeN for quickness of algorithm
