@@ -431,15 +431,15 @@ class Graph:
             fitness = -1/fitness
         return fitness
     
-    def evaluateSet(self, set):
+    def evaluateSet(self, vset):
         """ Test to see if a passed set is independent, if yes, size of set is returned, -1 elsewise """
         # Skip error test and assume len(set) == sizeN for quickness of algorithm
         setSize = 0
         independent = True
         for i in range(self.sizeN):
-            if set[i] :
+            if vset[i] :
                 for j in range(i+1, self.sizeN):
-                    if set[j] and self.adjMatrix[i][j]:
+                    if vset[j] and self.adjMatrix[i][j]:
                         independent = False
                         break
                 if not independent: 
