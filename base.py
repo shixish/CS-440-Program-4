@@ -218,9 +218,23 @@ class Graph:
         self.setFitness(vs)
         return vs
 
-    def annealSolution(self):
-        """ Generate the biggest set using the simulated annealing algorithm """
-        pass
+
+    def annealedSolution(self):
+        """ Generate the biggest set using the simulated annealing algorithm 
+        
+        e**(-dE/T)
+
+        >>> g = Graph(4,1,1,True)
+
+        >>> g.annealSolution()
+        Vertex set: [True, True, False, True]
+        Fitness: 9.000
+
+        """
+        T = 98.4 # temp -- larger = more bad trades accepted
+        D = 0.0 # distance change
+        K = e**((-d*E)/T) # 
+        return
 
     def exhaustiveSolution(self):
         """ Generate the biggest possible independent set of vertices by testing all possibilities 
