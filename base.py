@@ -178,7 +178,7 @@ class Graph:
                     self.adjMatrix[i][j] = self.adjMatrix[j][i] = self.rand.boolBernoulli(cnn)
                 # Debug code
                 #print self.adjMatrix[i]
-    
+
     def checkEdgePresent(self, v1, v2):
         """ Returns true if an edge exists between the two vertices, false otherwise or if invalid """
         # Check legality of vertices
@@ -217,7 +217,11 @@ class Graph:
                 vs.toggleVertex(v[0])
         self.setFitness(vs)
         return vs
-    
+
+    def annealSolution(self):
+        """ Generate the biggest set using the simulated annealing algorithm """
+        pass
+
     def exhaustiveSolution(self):
         """ Generate the biggest possible independent set of vertices by testing all possibilities 
         
