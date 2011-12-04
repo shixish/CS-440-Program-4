@@ -1,11 +1,11 @@
 ##################################################
-#   Non-contiguous Graph Solver
+#   I.ndependent V.ertex S.et P.roblem Solver
 #   Assignment 4 - CS 440 @ UH Hilo
 #
 #   Professor   : Dr. M. Peterson
 #   Students    : Cunnyngham, I.
-#           : Perkins, J.
-#           : Wessels, A.
+#               : Perkins, J.
+#               : Wessels, A.
 #
 #   Python implementaion of Dr. Peterson's 
 # template for this project.  Most comments stolen 
@@ -162,7 +162,7 @@ class Graph:
             self.cnn = cnn
             self.sizeN = size
             self.rand = Fxrandom(seed)
-            print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
+            # print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
         
         # Instantiate the class's adjacency matrix to all False values
         if not testcase:
