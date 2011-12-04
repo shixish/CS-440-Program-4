@@ -273,11 +273,11 @@ class Graph:
         maxScore = 0
         maxIndex = -1
         for i in range(1, (2**self.sizeN)):
-            if self.evaluateSet( VSet.lexSet(i, self.sizeN) ) > maxScore:
+            curScore = self.evaluateSet( VSet.lexSet(i, self.sizeN) )
+            if curScore > maxScore:
                 maxIndex = i
-        vs = VSet.lexSet(maxIndex, self.sizeN)
-        self.setFitness(vs)
-        return vs
+                maxScore = curScore
+        return VSet.lexSet(maxIndex, self.sizeN)
 
     def rouletteSelection(self, popsel, popnumber):
         """    Stochastic Sampling (Roulette wheel) method of selecting parents
