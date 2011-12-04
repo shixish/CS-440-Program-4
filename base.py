@@ -309,7 +309,6 @@ class Graph:
             return
         
         avg = total/popsize
-        print "Average before: %.2f"%(avg)
         sys.stdout.write("Epoc: ")
         for g in range(generations):
             
@@ -341,9 +340,17 @@ class Graph:
         #for i,s in enumerate(population):
         #    print "%i: %.8f"%(i,s.rank)
             #print "%i: %.1f %s"%(i,s.rank, s)
-        best = max(population, key=lambda s:s.fitness)
-        print "Average after: %.2f"%(total/popsize)
-        print "Best: %.2f"%(best.fitness)
+        best = "No valid solution found!"
+        sorted_population = sorted(population, key=lambda s: s.fitness, reverse=True)
+        for t in sorted(population, key=lambda s: s.fitness, reverse=True):
+            if self.evaluateSet(t) > 0:
+                best = t
+        #best = max(population, key=lambda s:s.fitness)
+        print "Average fitness before: %.2f"%(avg)
+        print "Average fitness after: %.2f"%(total/popsize)
+        print "Highest fitness: %.2f"%(sorted_population[0].fitness)
+        print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
+        print "Best: %s"%best
         return best
     
     def setFitness(self, vset_obj):
