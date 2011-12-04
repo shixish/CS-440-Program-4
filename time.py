@@ -37,6 +37,8 @@ for i in range(2, 27):
     after = datetime.datetime.now()
     print "GA score:".rjust(20), str(gaScore).rjust(3), " in", str(after-before)
     
+    before = datetime.datetime.now()
+
     # Annealing 
     vs = g.annealedSolution()
     aScore = g.evaluateSet(vs)
