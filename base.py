@@ -221,9 +221,22 @@ class Graph:
 
     def annealedSolution(self):
         """ Generate the biggest set using the simulated annealing algorithm 
-        
-        e**(-dE/T)
+        -- Start at some initial "temperature" T
+        -- Define a "cooling schedule T(x)
+        -- Define an energy function Energy(set)
+        -- Define a current_set initial state (vertex set)
 
+        Pseudocode:
+
+        while (not_converged):
+            new_set = (random)
+            Delta_s = Energy(new_set) - Energy(current_set)
+            if (Delta_s < 0):
+                current_set = new_set
+            else with probability P=e^(-Delta_s/T):
+                current_set = new_set
+            T = alpha T
+               
         >>> g = Graph(4,1,1,True)
 
         >>> g.annealSolution()
@@ -231,10 +244,22 @@ class Graph:
         Fitness: 9.000
 
         """
-        T = 98.4 # temp -- larger = more bad trades accepted
-        D = 0.0 # distance change
-        K = e**((-d*E)/T) # 
-        return
+        # initialize the empty set
+        vs = VSet.randomset(self.sizeN, self.rand)
+        not_converged = True
+        T = 1000 # temperature
+        while (not_converged):
+            new_set = VSet.randomset(self.sizeN, self.rand)
+            Delta_s = triangleFitness(new_set) - triangleFitness(vs)
+            if (Delta_s < 0):
+                vs = new_set
+            P = math.e**(-Delta_s/T)
+            else if (P > 0.5): 
+                vs = new_set
+            T -= 1
+            if T == 0:
+                not_converged = False   
+        return vs
 
     def exhaustiveSolution(self):
         """ Generate the biggest possible independent set of vertices by testing all possibilities 
