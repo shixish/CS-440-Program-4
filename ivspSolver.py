@@ -43,7 +43,7 @@ class VSet:
     
     def __init__(self, set=[]):
         """ Constructor for VSet, accepts an array of bools as default value of self.set """
-        self.set = set
+        self.set = [i for i in set]
         self.fitness = -1.0
     
     def toggleVertex(self, i):
@@ -326,7 +326,7 @@ class Graph:
             curScore = self.evaluateSet( s )
             if curScore > maxScore:
                 maxScore = curScore
-                maxSet = VSet( [ i for i in s.set ] )
+                maxSet = VSet( s )
         return maxSet
     
     def rouletteSelection(self, popsel, popnumber):
