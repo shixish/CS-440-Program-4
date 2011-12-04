@@ -78,22 +78,42 @@ class VSet:
         return cls( [False for i in range(size)] )
     
     @classmethod
-    def lexSet(cls, lexIndex, size):
-        """ Generate's the [lexIndex]th lexicographical set of vertices of [size] """
-        # Check to make sure the value passed is a valid lexicographical index
-        if lexIndex < 0 or lexIndex > (2**size)-1:
-            raise ValueError("Lexicographical index must be between 0 & (2**size)-1")
-        
-        # Generate the set by converting a number to binary, filling it to the 
-        # correct size, and converting the resultant bits into boolean values
-        return cls( [ bool(int(x)) for x in bin(lexIndex).split('b')[1].zfill(size)] )
-    
-    @classmethod
     def randomSet(cls, size, random, density=.2):
         """ Generates a random set, where individual vertex inclusion has [density] probability """
         return cls( [random.boolBernoulli(density) for i in range(size)] )
 
+
+### Vertex Set Iterator Class ###
+
+class VSetIter:
+    """ A Class that iterates through all permutations of a vertex set """
+    
+    def __init__(self, size):
+        """ Constructor which takes the size of the vertex sets to be generated """
+        self.sizeN = size
+        self.vs = VSet.emptySet( size )
+    
+    def __iter__(self):
+        """ Make class callable by iterator functions """
+        return self
+    
+    def next(self):
+        """ Find the next perumutation from the current vertex. Covers all possibilties until set is full """
+        size = k = len( self.vs.set )
+        if self.vs.set.count(True) == size:
+            raise StopIteration
+        while k>=1 and self.vs.set[k-1]:
+            k-=1
+        
+        if k>=1:
+            self.vs.set[k-1]=True
+            for i in range(k, size ):
+                self.vs.set[i] = False
+        return self.vs
+
+
 ### Graph Class ###    
+
 class Graph:
     """ A class representing a undirected graph with random connectivity """
     
@@ -260,7 +280,7 @@ class Graph:
             if (T == 0):
                 not_converged = False   
         return vs
-
+    
     def exhaustiveSolution(self):
         """ Generate the biggest possible independent set of vertices by testing all possibilities 
         
@@ -271,14 +291,13 @@ class Graph:
         Fitness: 9.000
         """
         maxScore = 0
-        maxIndex = -1
-        for i in range(1, (2**self.sizeN)):
-            curScore = self.evaluateSet( VSet.lexSet(i, self.sizeN) )
+        for s in VSetIter( self.sizeN ):
+            curScore = self.evaluateSet( s )
             if curScore > maxScore:
-                maxIndex = i
                 maxScore = curScore
-        return VSet.lexSet(maxIndex, self.sizeN)
-
+                maxSet = VSet( [ i for i in s.set ] )
+        return maxSet
+    
     def rouletteSelection(self, popsel, popnumber):
         """    Stochastic Sampling (Roulette wheel) method of selecting parents
             This method requires some extra preperation of the data, and fails when fitness is negative...
@@ -333,7 +352,7 @@ class Graph:
             fitFunc = self.setFitness
         if not density:
             density = self.greedySolution().density()*.25
-            print "Using density: %.5f"%density
+            # print "Using density: %.5f"%density
         population = []
         total = 0.0
         #initialize the population
@@ -348,8 +367,8 @@ class Graph:
             return
         
         avg = total/popsize
-        print "Average before: %.2f"%(avg)
-        sys.stdout.write("Epoc: ")
+        # print "Average before: %.2f"%(avg)
+        # sys.stdout.write("Epoc: ")
         for g in range(generations):
             
             for p in population:
@@ -373,16 +392,16 @@ class Graph:
             #for i, s in enumerate(siblings):
             #    s.rank = self.evaluateSet(s)
             
-            sys.stdout.write("%i "%g)
-            sys.stdout.flush()
-        sys.stdout.write("\n")
+            # sys.stdout.write("%i "%g)
+            # sys.stdout.flush()
+        # sys.stdout.write("\n")
         
         #for i,s in enumerate(population):
         #    print "%i: %.8f"%(i,s.rank)
             #print "%i: %.1f %s"%(i,s.rank, s)
         best = max(population, key=lambda s:s.fitness)
-        print "Average after: %.2f"%(total/popsize)
-        print "Best: %.2f"%(best.fitness)
+        # print "Average after: %.2f"%(total/popsize)
+        # print "Best: %.2f"%(best.fitness)
         return best
     
     def setFitness(self, vset_obj):
