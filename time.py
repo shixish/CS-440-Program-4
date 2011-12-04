@@ -15,7 +15,7 @@ for i in range(2, 27):
     eScore = g.evaluateSet(vs)
     
     after = datetime.datetime.now()
-    print "Exhaustive score:", eScore, "in", str(after-before)
+    print "Exhaustive score:".rjust(20), str(eScore).rjust(3), " in", str(after-before)
     
     
     # Greedy 
@@ -25,7 +25,7 @@ for i in range(2, 27):
     gScore = g.evaluateSet(vs)
     
     after = datetime.datetime.now()
-    print "Greedy score:", gScore, "in", str(after-before)
+    print "Greedy score:".rjust(20), str(gScore).rjust(3), " in", str(after-before)
     
     
     # GA 
@@ -35,12 +35,12 @@ for i in range(2, 27):
     gaScore = g.evaluateSet(vs)
     
     after = datetime.datetime.now()
-    print "GA score:", gaScore, "in", str(after-before)
+    print "GA score:".rjust(20), str(gaScore).rjust(3), " in", str(after-before)
     
     # Annealing 
     vs = g.annealedSolution()
     aScore = g.evaluateSet(vs)
     
     after = datetime.datetime.now()
-    print "Anlealing score:", aScore, "in", str(after-before)
+    print "Anlealing score:".rjust(20), str(aScore).rjust(3), " in", str(after-before)
     print 
