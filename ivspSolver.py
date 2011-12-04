@@ -20,6 +20,7 @@
 #!/usr/bin/python
 
 import sys
+import time
 import datetime
 import math
 import random
@@ -266,15 +267,37 @@ class Graph:
 
         """
         # initialize the empty set
+        loud = False # set to True to see debugging output
         vs = VSet.randomSet(self.sizeN, self.rand)
+        new_set = VSet(vs)
         not_converged = True
         T = self.sizeN # temperature
+        i = 1 # iteration count
         if T < 1000:
             T = 1000
         while (not_converged):
-            new_set = VSet(vs)
-            new_set.toggleVertex(random.randrange(self.sizeN))
-            Delta_s = 1 # TODO BROKE #self.setFitness(new_set) - self.setFitness(vs)
+            if loud: print "(1) Iteration: {0}".format(i)
+            if loud: time.sleep(1)
+            new_set = VSet(vs.set)
+            if loud:
+                print "(2) Current set: {0}".format(vs)
+                print "(3) new_set: {0}".format(new_set)
+            tog = random.randrange(self.sizeN)
+            if loud: 
+                print "(4) Toggling new_set vertex: {0}".format(tog)
+                print "(5) new_set now {0}".format(new_set)
+            new_set.toggleVertex(tog)
+            if loud: print "(6) Setting fitness values..."
+            self.setFitness(new_set)
+            if loud: print "(7) new_set done..."
+            self.setFitness(vs)
+            if loud:
+                print "(8) old set done..."
+                time.sleep(1)
+                print "(9) new set fitness: {0}".format(new_set.fitness)
+                print "(10) current fitness: {0}".format(vs.fitness)
+            Delta_s = new_set.fitness - vs.fitness
+            if loud: print "(11) Delta_s set to {0}".format(Delta_s)
             if (Delta_s < 0):
                 vs = new_set
             P = math.e**(-Delta_s/T)
@@ -282,9 +305,13 @@ class Graph:
                 vs = new_set
             T -= 1
             if (T == 0):
+                if loud: print "(**) Set has converged."
                 not_converged = False   
+            i += 1
+            if loud: time.sleep(0.5)
         return vs
-    
+   
+
     def exhaustiveSolution(self):
         """ Generate the biggest possible independent set of vertices by testing all possibilities 
         
