@@ -245,12 +245,12 @@ class Graph:
 
         """
         # initialize the empty set
-        vs = VSet.randomset(self.sizeN, self.rand)
+        vs = VSet.randomSet(self.sizeN, self.rand)
         not_converged = True
         T = 1000 # temperature
         while (not_converged):
-            new_set = VSet.randomset(self.sizeN, self.rand)
-            Delta_s = triangleFitness(new_set) - triangleFitness(vs)
+            new_set = VSet.randomSet(self.sizeN, self.rand)
+            Delta_s = self.triangleFitness(new_set) - self.triangleFitness(vs)
             if (Delta_s < 0):
                 vs = new_set
             P = math.e**(-Delta_s/T)
