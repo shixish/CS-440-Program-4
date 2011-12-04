@@ -254,10 +254,10 @@ class Graph:
             if (Delta_s < 0):
                 vs = new_set
             P = math.e**(-Delta_s/T)
-            else if (P > 0.5): 
+            if (P > 0.5): 
                 vs = new_set
             T -= 1
-            if T == 0:
+            if (T == 0):
                 not_converged = False   
         return vs
 
