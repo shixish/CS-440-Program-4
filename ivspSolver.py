@@ -22,6 +22,7 @@
 import sys
 import datetime
 import math
+import random
 
 #throwaway test class
 class test:
@@ -267,10 +268,13 @@ class Graph:
         # initialize the empty set
         vs = VSet.randomSet(self.sizeN, self.rand)
         not_converged = True
-        T = 1000 # temperature
+        T = self.sizeN # temperature
+        if T < 1000:
+            T = 1000
         while (not_converged):
-            new_set = VSet.randomSet(self.sizeN, self.rand)
-            Delta_s = self.triangleFitness(new_set) - self.triangleFitness(vs)
+            new_set = VSet(vs)
+            new_set.toggleVertex(random.randrange(self.sizeN))
+            Delta_s = 1 # TODO BROKE #self.setFitness(new_set) - self.setFitness(vs)
             if (Delta_s < 0):
                 vs = new_set
             P = math.e**(-Delta_s/T)
