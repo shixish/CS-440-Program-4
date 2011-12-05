@@ -337,29 +337,26 @@ class Graph:
 
         """
         bestScore = 0
-        for j in range(self.sizeN):
-            vs = VSet.randomSet(self.sizeN, self.rand)
-            new_set = VSet(vs)
+        for j in range(self.sizeN*2):
+            T = self.sizeN
+            curSet = VSet.randomSet(self.sizeN, self.rand)
+            
             not_converged = True
-            T = 2*self.sizeN # temperature
             while (not_converged):
-                new_set = VSet(vs.set)
-                tog = random.randrange(self.sizeN)
-                new_set.toggleVertex(tog)
-                newFit = self.triangleFitness(new_set)
-                oldFit = self.triangleFitness(vs)
-                Delta_s = oldFit - newFit
+                newSet = VSet( curSet.set )
+                newSet.toggleVertex( random.randrange(self.sizeN) )
+                Delta_s = self.triangleFitness(curSet) - self.triangleFitness(newSet)
                 if (Delta_s < 0):
-                    vs = new_set
+                    curSet = newSet
                 P = math.e**(-Delta_s/T)
                 if (self.rand.boolBernoulli( P )): 
-                    vs = new_set
-                T -= 1
-                if (T == 1):
+                    curSet = newSet
+                T -= .1
+                if T <= 1.0:
                     not_converged = False
-            endScore = self.triangleFitness( vs )
+            endScore = self.triangleFitness( curSet )
             if endScore > bestScore:
-                bestSet = VSet( vs )
+                bestSet = VSet( curSet )
                 bestScore = endScore
         return bestSet
     
