@@ -25,17 +25,6 @@ import datetime
 import math
 import random
 
-#throwaway test class
-class test:
-    def __init__(self):
-        for y in range(1,10):
-            cnn = y/10.0
-            for x in range(2,30):    
-                test = Graph(x, cnn)
-                solution = test.greedySolution()
-                sol = solution.set.count(True)/float(len(solution.set))
-                print "%i vertices with %.2f connectivity, solution percentage: %.2f"%(x, cnn, sol)
-
 ### Vertex Set Class ###
 
 class VSet:
@@ -396,27 +385,6 @@ class Graph:
             choice.append(parent)
         return choice
         
-    '''
-    def tournamentSelection(popsel, popnumber):
-        choice = [ ]
-        k = 0
-        while (k < popnumber):
-            parent = [ ]
-            for j in range(0, 2):
-                partsum = 0
-                randnum = self.rand.uniform(0.0, 1.0)
-                for i in range(0, popnumber):
-                    partsum += popsel[i].rank
-                    if partsum > randnum:
-                        parent.append(i)
-                        break
-            if (popsel[parent[0]] > popsel[parent[1]]):
-                choice.append(parent[0])
-            else: 
-                choice.append(parent[1])
-            k = k+1
-        return choice
-    '''
     def mutate(self, value, rate=None):
         if rate == None:
             return value
