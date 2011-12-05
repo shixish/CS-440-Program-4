@@ -310,8 +310,59 @@ class Graph:
             i += 1
             if loud: time.sleep(0.5)
         return vs
-   
+    
+    def shallowAnnealing(self):
+        """ Generate the biggest set using the simulated annealing algorithm 
+        -- Start at some initial "temperature" T
+        -- Define a "cooling schedule T(x)
+        -- Define an energy function Energy(set)
+        -- Define a current_set initial state (vertex set)
 
+        Pseudocode:
+
+        while (not_converged):
+            new_set = (random)
+            Delta_s = Energy(new_set) - Energy(current_set)
+            if (Delta_s < 0):
+                current_set = new_set
+            else with probability P=e^(-Delta_s/T):
+                current_set = new_set
+            T = alpha T
+               
+        >>> g = Graph(4,1,1,True)
+
+        >>> g.annealSolution()
+        Vertex set: [True, True, False, True]
+        Fitness: 9.000
+
+        """
+        bestScore = 0
+        for j in range(self.sizeN):
+            vs = VSet.randomSet(self.sizeN, self.rand)
+            new_set = VSet(vs)
+            not_converged = True
+            T = 2*self.sizeN # temperature
+            while (not_converged):
+                new_set = VSet(vs.set)
+                tog = random.randrange(self.sizeN)
+                new_set.toggleVertex(tog)
+                newFit = self.triangleFitness(new_set)
+                oldFit = self.triangleFitness(vs)
+                Delta_s = oldFit - newFit
+                if (Delta_s < 0):
+                    vs = new_set
+                P = math.e**(-Delta_s/T)
+                if (self.rand.boolBernoulli( P )): 
+                    vs = new_set
+                T -= 1
+                if (T == 1):
+                    not_converged = False
+            endScore = self.triangleFitness( vs )
+            if endScore > bestScore:
+                bestSet = VSet( vs )
+                bestScore = endScore
+        return bestSet
+    
     def exhaustiveSolution(self):
         """ Generate the biggest possible independent set of vertices by testing all possibilities 
         

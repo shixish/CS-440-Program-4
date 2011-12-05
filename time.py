@@ -4,7 +4,7 @@ import datetime
 import ivspSolver
 from ivspSolver import *
 
-for i in range(2, 27):
+for i in range(3, 27):
     print "Vertex Set Size: ", i
     g = Graph(i, .15)
     
@@ -40,9 +40,9 @@ for i in range(2, 27):
     before = datetime.datetime.now()
 
     # Annealing 
-    vs = g.annealedSolution()
+    vs = g.shallowAnnealing()
     aScore = g.evaluateSet(vs)
     
     after = datetime.datetime.now()
-    print "Anlealing score:".rjust(20), str(aScore).rjust(3), " in", str(after-before)
+    print "Annealing score:".rjust(20), str(aScore).rjust(3), " in", str(after-before)
     print 
