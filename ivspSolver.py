@@ -33,7 +33,7 @@ class VSet:
     def __init__(self, set=[]):
         """ Constructor for VSet, accepts an array of bools as default value of self.set """
         self.set = [i for i in set]
-        self.fitness = -1.0
+        self.fitness = -1
     
     def toggleVertex(self, i):
         """ Toggle whether a vertex at the given index is included in the set or not """
@@ -108,7 +108,7 @@ class VSetIter:
 class Graph:
     """ A class representing a undirected graph with random connectivity """
     
-    def __init__(self, size, cnn, seed=0, testcase=False):
+    def __init__(self, size, cnn, seed=0, testcase=False, fitfunc=None):
         """  This is the public constructor for the graph class.  
         
           Size is the number
@@ -173,6 +173,9 @@ class Graph:
             self.cnn = cnn
             self.sizeN = size
             self.rand = Fxrandom(seed)
+            if fitfunc == None:
+                fitfunc = self.triangleFitness
+            self.fitfunc = fitfunc #define a global fit function to use by default...
             # print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
         
         # Instantiate the class's adjacency matrix to all False values
@@ -226,7 +229,7 @@ class Graph:
             vs.toggleVertex(v[0])
             if self.evaluateSet(vs) == -1:
                 vs.toggleVertex(v[0])
-        self.setFitness(vs)
+        vs.fitness = self.fitfunc(vs)
         return vs
 
 
@@ -277,9 +280,9 @@ class Graph:
                 print "(5) new_set now {0}".format(new_set)
             new_set.toggleVertex(tog)
             if loud: print "(6) Setting fitness values..."
-            self.setFitness(new_set)
+            new_set.fitness = self.fitfunc(new_set)
             if loud: print "(7) new_set done..."
-            self.setFitness(vs)
+            vs.fitness = self.fitfunc(vs)
             if loud:
                 print "(8) old set done..."
                 time.sleep(1)
@@ -298,6 +301,7 @@ class Graph:
                 not_converged = False   
             i += 1
             if loud: time.sleep(0.5)
+        vs.fitness = self.fitfunc(vs)
         return vs
     
     def shallowAnnealing(self):
@@ -334,7 +338,7 @@ class Graph:
             while (not_converged):
                 newSet = VSet( curSet.set )
                 newSet.toggleVertex( random.randrange(self.sizeN) )
-                Delta_s = self.triangleFitness(curSet) - self.triangleFitness(newSet)
+                Delta_s = self.fitfunc(curSet) - self.fitfunc(newSet)
                 if (Delta_s < 0):
                     curSet = newSet
                 P = math.e**(-Delta_s/T)
@@ -343,10 +347,11 @@ class Graph:
                 T -= .1
                 if T <= 1.0:
                     not_converged = False
-            endScore = self.triangleFitness( curSet )
+            endScore = self.fitfunc( curSet )
             if endScore > bestScore:
                 bestSet = VSet( curSet )
                 bestScore = endScore
+        bestSet.fitness = self.fitfunc(bestSet)
         return bestSet
     
     def exhaustiveSolution(self):
@@ -364,6 +369,7 @@ class Graph:
             if curScore > maxScore:
                 maxScore = curScore
                 maxSet = VSet( s )
+        maxSet.fitness = self.fitfunc(maxSet)
         return maxSet
     
     def rouletteSelection(self, popsel, popnumber):
@@ -393,10 +399,10 @@ class Graph:
     def combine(self, group1, group2, mutation):
         return VSet( [self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i,v in enumerate(group1)] )
     
-    def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0, fitFunc=None):
+    def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0, fitfunc=None):
         """ Finds an independent set using a Genetic Algorithm """
-        if fitFunc == None:
-            fitFunc = self.setFitness
+        if fitfunc == None:
+            fitfunc = self.fitfunc
         if not density:
             density = self.greedySolution().density()*.25
             # print "Using density: %.5f"%density
@@ -405,7 +411,7 @@ class Graph:
         #initialize the population
         for i in range(popsize):
             s = VSet.randomSet(self.sizeN, self.rand, density)
-            s.fitness = fitFunc(s)
+            s.fitness = fitfunc(s)
             total += s.fitness
             population.append(s)
         
@@ -431,7 +437,7 @@ class Graph:
             total = 0.0
             for i in range(randpop):
                 s = self.combine(population[males[i]], population[females[i]], mutation=mutation)
-                s.fitness = fitFunc(s)
+                s.fitness = fitfunc(s)
                 total += s.fitness
                 population[preserve+i] = s
         
@@ -478,7 +484,6 @@ class Graph:
         fitness = float(setSize*setSize)-(connections*connections)
         if fitness < 0: #i need the fitness to remain in the positives...
             fitness = -1/fitness
-        vset_obj.fitness = fitness
         return fitness
     
     def setFitness4(self, set):
