@@ -31,7 +31,7 @@ for i in range(4, 27):
     # GA 
     before = datetime.datetime.now()
     
-    vs = g.GASolution(fitFunc=g.triangleFitness)
+    vs = g.GASolution(popsize=i*4, generations=i*3, mutation=.05, fitFunc=g.triangleFitness)
     gaScore = g.evaluateSet(vs)
     
     after = datetime.datetime.now()
