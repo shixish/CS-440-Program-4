@@ -7,6 +7,7 @@ from ivspSolver import *
 for i in range(4, 27):
     print "Vertex Set Size: ", i
     g = Graph(i, .15)
+    g.fitfunc = g.tobyFitness
     
     # Exhaustive 
     before = datetime.datetime.now()

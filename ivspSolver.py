@@ -206,7 +206,7 @@ class Graph:
         s.fitness = self.fitfunc( s )
         return s
     
-    def shallowAnnealing(self):
+    def shallowAnnealing(self, coolStep=.1):
         """ Generate the biggest set using the simulated annealing algorithm 
         -- Start at some initial "temperature" T
         -- Define a "cooling schedule" T(x)
@@ -246,7 +246,7 @@ class Graph:
                 P = math.e**(-Delta_s/T)
                 if (self.rand.boolBernoulli( P )): 
                     curSet = newSet
-                T -= .1
+                T -= coolStep
                 if T <= 1.0:
                     not_converged = False
             endScore = self.fitfunc( curSet )
@@ -370,15 +370,15 @@ class Graph:
         #print "Best: %s"%best
         return best
     
-    def triangleFitness(self, set):
+    def triangleFitness(self, s):
         """ Fitness= for i vertexes: sum( [tri] || - 1.5*[tri]).  [tri] = triangle number of ith vertex """
-        # Skip error test and assume len(set) == sizeN for quickness of algorithm
-        setSize = fitness = 0
-        ind = True
+        # Skip error test and assume len(s) == sizeN for quickness of algorithm
+        setSize = fitness = 0.0
         for i in range(self.sizeN):
-            if set[i] :
+            if s[i] :
+                ind = True
                 for j in range(i+1, self.sizeN):
-                    if set[j] and self.adjMatrix[i][j]:
+                    if s[j] and self.adjMatrix[i][j]:
                         ind = False
                         break
                 if ind:
@@ -387,8 +387,30 @@ class Graph:
                     fitness-=1.5*setSize
                 setSize+=1
         if fitness < 0: #i need the fitness to remain in the positives...
-            fitness = -1/fitness
+            fitness = -1.0/fitness
         return fitness
+    
+    def tobyFitness(self, s):
+        # Skip error test and assume len(s) == sizeN for quickness of algorithm
+        setSize = fitness = 0.0
+        valid = invalid = missingValids = 0.0
+        for i in range(self.sizeN):
+            if s[i] :
+                ind = True
+                for j in range(i+1, self.sizeN):
+                    if s[j] and self.adjMatrix[i][j]:
+                        ind = False
+                        break
+                if ind:
+                    valid += 1
+                else:
+                    invalid += 1
+                setSize+=1
+            else:
+                missingValids +=1
+        #return (( setSize )**2) / ( (invalid+1)**2)  # works at low numbers
+        # return ( setSize ) / (invalid+1) # works at low numbers
+        return ( valid ) / (invalid+1)
     
     def evaluateSet(self, vset):
         """ Test to see if a passed set is independent, if yes, size of set is returned, -1 elsewise """
