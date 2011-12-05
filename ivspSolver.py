@@ -1,11 +1,11 @@
 ##################################################
-#   Non-contiguous Graph Solver
+#   I.ndependent V.ertex S.et P.roblem Solver
 #   Assignment 4 - CS 440 @ UH Hilo
 #
 #   Professor   : Dr. M. Peterson
 #   Students    : Cunnyngham, I.
-#           : Perkins, J.
-#           : Wessels, A.
+#               : Perkins, J.
+#               : Wessels, A.
 #
 #   Python implementaion of Dr. Peterson's 
 # template for this project.  Most comments stolen 
@@ -20,8 +20,10 @@
 #!/usr/bin/python
 
 import sys
+import time
 import datetime
 import math
+import random
 
 #throwaway test class
 class test:
@@ -41,7 +43,7 @@ class VSet:
     
     def __init__(self, set=[]):
         """ Constructor for VSet, accepts an array of bools as default value of self.set """
-        self.set = set
+        self.set = [i for i in set]
         self.fitness = -1.0
     
     def toggleVertex(self, i):
@@ -78,22 +80,42 @@ class VSet:
         return cls( [False for i in range(size)] )
     
     @classmethod
-    def lexSet(cls, lexIndex, size):
-        """ Generate's the [lexIndex]th lexicographical set of vertices of [size] """
-        # Check to make sure the value passed is a valid lexicographical index
-        if lexIndex < 0 or lexIndex > (2**size)-1:
-            raise ValueError("Lexicographical index must be between 0 & (2**size)-1")
-        
-        # Generate the set by converting a number to binary, filling it to the 
-        # correct size, and converting the resultant bits into boolean values
-        return cls( [ bool(int(x)) for x in bin(lexIndex).split('b')[1].zfill(size)] )
-    
-    @classmethod
     def randomSet(cls, size, random, density=.2):
         """ Generates a random set, where individual vertex inclusion has [density] probability """
         return cls( [random.boolBernoulli(density) for i in range(size)] )
 
+
+### Vertex Set Iterator Class ###
+
+class VSetIter:
+    """ A Class that iterates through all permutations of a vertex set """
+    
+    def __init__(self, size):
+        """ Constructor which takes the size of the vertex sets to be generated """
+        self.sizeN = size
+        self.vs = VSet.emptySet( size )
+    
+    def __iter__(self):
+        """ Make class callable by iterator functions """
+        return self
+    
+    def next(self):
+        """ Find the next perumutation from the current vertex. Covers all possibilties until set is full """
+        size = k = len( self.vs.set )
+        if self.vs.set.count(True) == size:
+            raise StopIteration
+        while k>=1 and self.vs.set[k-1]:
+            k-=1
+        
+        if k>=1:
+            self.vs.set[k-1]=True
+            for i in range(k, size ):
+                self.vs.set[i] = False
+        return self.vs
+
+
 ### Graph Class ###    
+
 class Graph:
     """ A class representing a undirected graph with random connectivity """
     
@@ -162,7 +184,7 @@ class Graph:
             self.cnn = cnn
             self.sizeN = size
             self.rand = Fxrandom(seed)
-            print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
+            # print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
         
         # Instantiate the class's adjacency matrix to all False values
         if not testcase:
@@ -245,12 +267,37 @@ class Graph:
 
         """
         # initialize the empty set
-        vs = VSet.randomset(self.sizeN, self.rand)
+        loud = False # set to True to see debugging output
+        vs = VSet.randomSet(self.sizeN, self.rand)
+        new_set = VSet(vs)
         not_converged = True
-        T = 1000 # temperature
+        T = self.sizeN # temperature
+        i = 1 # iteration count
+        if T < 1000:
+            T = 1000
         while (not_converged):
-            new_set = VSet.randomset(self.sizeN, self.rand)
-            Delta_s = triangleFitness(new_set) - triangleFitness(vs)
+            if loud: print "(1) Iteration: {0}".format(i)
+            if loud: time.sleep(1)
+            new_set = VSet(vs.set)
+            if loud:
+                print "(2) Current set: {0}".format(vs)
+                print "(3) new_set: {0}".format(new_set)
+            tog = random.randrange(self.sizeN)
+            if loud: 
+                print "(4) Toggling new_set vertex: {0}".format(tog)
+                print "(5) new_set now {0}".format(new_set)
+            new_set.toggleVertex(tog)
+            if loud: print "(6) Setting fitness values..."
+            self.setFitness(new_set)
+            if loud: print "(7) new_set done..."
+            self.setFitness(vs)
+            if loud:
+                print "(8) old set done..."
+                time.sleep(1)
+                print "(9) new set fitness: {0}".format(new_set.fitness)
+                print "(10) current fitness: {0}".format(vs.fitness)
+            Delta_s = new_set.fitness - vs.fitness
+            if loud: print "(11) Delta_s set to {0}".format(Delta_s)
             if (Delta_s < 0):
                 vs = new_set
             P = math.e**(-Delta_s/T)
@@ -258,9 +305,61 @@ class Graph:
                 vs = new_set
             T -= 1
             if (T == 0):
+                if loud: print "(**) Set has converged."
                 not_converged = False   
+            i += 1
+            if loud: time.sleep(0.5)
         return vs
+    
+    def shallowAnnealing(self):
+        """ Generate the biggest set using the simulated annealing algorithm 
+        -- Start at some initial "temperature" T
+        -- Define a "cooling schedule T(x)
+        -- Define an energy function Energy(set)
+        -- Define a current_set initial state (vertex set)
 
+        Pseudocode:
+
+        while (not_converged):
+            new_set = (random)
+            Delta_s = Energy(new_set) - Energy(current_set)
+            if (Delta_s < 0):
+                current_set = new_set
+            else with probability P=e^(-Delta_s/T):
+                current_set = new_set
+            T = alpha T
+               
+        >>> g = Graph(4,1,1,True)
+
+        >>> g.annealSolution()
+        Vertex set: [True, True, False, True]
+        Fitness: 9.000
+
+        """
+        bestScore = 0
+        for j in range(self.sizeN*2):
+            T = self.sizeN
+            curSet = VSet.randomSet(self.sizeN, self.rand)
+            
+            not_converged = True
+            while (not_converged):
+                newSet = VSet( curSet.set )
+                newSet.toggleVertex( random.randrange(self.sizeN) )
+                Delta_s = self.triangleFitness(curSet) - self.triangleFitness(newSet)
+                if (Delta_s < 0):
+                    curSet = newSet
+                P = math.e**(-Delta_s/T)
+                if (self.rand.boolBernoulli( P )): 
+                    curSet = newSet
+                T -= .1
+                if T <= 1.0:
+                    not_converged = False
+            endScore = self.triangleFitness( curSet )
+            if endScore > bestScore:
+                bestSet = VSet( curSet )
+                bestScore = endScore
+        return bestSet
+    
     def exhaustiveSolution(self):
         """ Generate the biggest possible independent set of vertices by testing all possibilities 
         
@@ -271,14 +370,13 @@ class Graph:
         Fitness: 9.000
         """
         maxScore = 0
-        maxIndex = -1
-        for i in range(1, (2**self.sizeN)):
-            if self.evaluateSet( VSet.lexSet(i, self.sizeN) ) > maxScore:
-                maxIndex = i
-        vs = VSet.lexSet(maxIndex, self.sizeN)
-        self.setFitness(vs)
-        return vs
-
+        for s in VSetIter( self.sizeN ):
+            curScore = self.evaluateSet( s )
+            if curScore > maxScore:
+                maxScore = curScore
+                maxSet = VSet( s )
+        return maxSet
+    
     def rouletteSelection(self, popsel, popnumber):
         """    Stochastic Sampling (Roulette wheel) method of selecting parents
             This method requires some extra preperation of the data, and fails when fitness is negative...
@@ -333,7 +431,7 @@ class Graph:
             fitFunc = self.setFitness
         if not density:
             density = self.greedySolution().density()*.25
-            print "Using density: %.5f"%density
+            # print "Using density: %.5f"%density
         population = []
         total = 0.0
         #initialize the population
@@ -348,7 +446,8 @@ class Graph:
             return
         
         avg = total/popsize
-        sys.stdout.write("Epoc: ")
+        # print "Average before: %.2f"%(avg)
+        # sys.stdout.write("Epoc: ")
         for g in range(generations):
             
             for p in population:
@@ -372,9 +471,9 @@ class Graph:
             #for i, s in enumerate(siblings):
             #    s.rank = self.evaluateSet(s)
             
-            sys.stdout.write("%i "%g)
-            sys.stdout.flush()
-        sys.stdout.write("\n")
+            # sys.stdout.write("%i "%g)
+            # sys.stdout.flush()
+        # sys.stdout.write("\n")
         
         #for i,s in enumerate(population):
         #    print "%i: %.8f"%(i,s.rank)
@@ -385,11 +484,11 @@ class Graph:
             if self.evaluateSet(t) > 0:
                 best = t
         #best = max(population, key=lambda s:s.fitness)
-        print "Average fitness before: %.2f"%(avg)
-        print "Average fitness after: %.2f"%(total/popsize)
-        print "Highest fitness: %.2f"%(sorted_population[0].fitness)
-        print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
-        print "Best: %s"%best
+        #print "Average fitness before: %.2f"%(avg)
+        #print "Average fitness after: %.2f"%(total/popsize)
+        #print "Highest fitness: %.2f"%(sorted_population[0].fitness)
+        #print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
+        #print "Best: %s"%best
         return best
     
     def setFitness(self, vset_obj):
