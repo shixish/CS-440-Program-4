@@ -32,7 +32,7 @@ class VSet:
     
     def __init__(self, set=[]):
         """ Constructor for VSet, accepts an array of bools as default value of self.set """
-        self.set = [i for i in set]
+        self.set = [ i for i in set ]
         self.fitness = -1
     
     def toggleVertex(self, i):
@@ -66,12 +66,12 @@ class VSet:
     @classmethod
     def emptySet(cls, size):
         """ Returns an empty set (all False valued) of [size] """
-        return cls( [False for i in range(size)] )
+        return cls( [ False for i in range(size) ] )
     
     @classmethod
     def randomSet(cls, size, random, density=.2):
         """ Generates a random set, where individual vertex inclusion has [density] probability """
-        return cls( [random.boolBernoulli(density) for i in range(size)] )
+        return cls( [ random.boolBernoulli(density) for i in range(size) ] )
 
 
 ### Vertex Set Iterator Class ###
@@ -122,6 +122,7 @@ class Graph:
           cnn  -- Connectivity of the graph.
           seed -- Random number generator seed (default 0).   testcase -- If you want the test case graph, set this to true.
           testcase -- Set to true for the 4x4 static test case
+          fitfunc -- Set the fitness function for the GA and annealing solutions to use
         >>> g = Graph(4,1,1,True) # test case graph generation
         
         >>> g
@@ -139,28 +140,6 @@ class Graph:
         
         """
         # Perform error checking
-        if testcase == True:
-            self.adjMatrix = [ [ False for j in range(4) ] for i in range(4) ]
-            self.adjMatrix[0][0] = False 
-            self.adjMatrix[0][1] = False
-            self.adjMatrix[0][2] = True
-            self.adjMatrix[0][3] = False
-            self.adjMatrix[1][0] = False
-            self.adjMatrix[1][1] = False
-            self.adjMatrix[1][2] = True
-            self.adjMatrix[1][3] = False
-            self.adjMatrix[2][0] = True
-            self.adjMatrix[2][1] = True
-            self.adjMatrix[2][2] = False
-            self.adjMatrix[2][3] = True
-            self.adjMatrix[3][0] = False
-            self.adjMatrix[3][1] = False
-            self.adjMatrix[3][2] = True
-            self.adjMatrix[3][3] = False
-            self.rand = Fxrandom(seed)
-            self.sizeN = 4
-            
-        # Perform error checking
         if size <= 0:
             raise ValueError("Graph Init: size must be > 0.")
         if cnn < 0.0 or cnn > 1.0:
@@ -168,8 +147,17 @@ class Graph:
         if seed < 0:
             raise ValueError("Graph Init: seed must be >= 0.")
         
-        # Define class variables
-        if not testcase:
+        if testcase:
+            self.adjMatrix = [ [ False for j in range(4) ] for i in range(4) ]
+            self.adjMatrix[0][2] = True
+            self.adjMatrix[1][2] = True
+            self.adjMatrix[2][0] = True
+            self.adjMatrix[2][1] = True
+            self.adjMatrix[2][3] = True
+            self.adjMatrix[3][2] = True
+            self.rand = Fxrandom(seed)
+            self.sizeN = 4
+        else:
             self.cnn = cnn
             self.sizeN = size
             self.rand = Fxrandom(seed)
@@ -177,32 +165,19 @@ class Graph:
                 fitfunc = self.triangleFitness
             self.fitfunc = fitfunc #define a global fit function to use by default...
             # print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
-        
-        # Instantiate the class's adjacency matrix to all False values
-        if not testcase:
+            
+            # Instantiate the class's adjacency matrix to all False values
             self.adjMatrix = [ [False for j in range(self.sizeN) ] for i in range(self.sizeN) ]
-        
-        # Initialize edges according to a weighted coin flip.
-        # if cnn = 0.1, there will be a 10% chance of creating an edge
-        # between vertices i and j.  Note that there will never be an
-        # edge between a vertex and itself.
-        if not testcase:
+            
+            # Initialize edges according to a weighted coin flip.
+            # if cnn = 0.1, there will be a 10% chance of creating an edge
+            # between vertices i and j.  Note that there will never be an
+            # edge between a vertex and itself.
             for i in range(self.sizeN):
                 for j in range(i+1, self.sizeN):
                     self.adjMatrix[i][j] = self.adjMatrix[j][i] = self.rand.boolBernoulli(cnn)
                 # Debug code
                 #print self.adjMatrix[i]
-
-    def checkEdgePresent(self, v1, v2):
-        """ Returns true if an edge exists between the two vertices, false otherwise or if invalid """
-        # Check legality of vertices
-        if (v1 < 0) or (v2 < 0) or (v1 >= self.sizeN) or (v2 >= self.sizeN): 
-            return False
-        return self.adjMatrix[v1][v2]
-    
-    def edgePresent(self, v1, v2):
-        """ Same as checkEdgePresent, minus the validity checks """
-        return self.adjMatrix[v1][v2]
     
     def greedySolution(self):
         """ 
@@ -214,100 +189,27 @@ class Graph:
         Vertex set: [True, True, False, True]
         Fitness: 9.000
         """
-        # Initialize an empty set
-        vs = VSet.emptySet(self.sizeN)
+        s = VSet.emptySet( self.sizeN )
         
         # Rank the vertexes by their connectedness
         vrank = []
         for i, row in enumerate(self.adjMatrix):
-            vrank.append([i, row.count(True)])
-        vrank = sorted(vrank, key=lambda v: v[1])
+            vrank.append( [i, row.count(True) ])
+        vrank = sorted( vrank, key=lambda v: v[1] )
         
         # Try to add each vector from lowest connectedness up.  
         # If the vector breaks the set, toggle it back.
         for v in vrank:
-            vs.toggleVertex(v[0])
-            if self.evaluateSet(vs) == -1:
-                vs.toggleVertex(v[0])
-        vs.fitness = self.fitfunc(vs)
-        return vs
-
-
-    def annealedSolution(self):
-        """ Generate the biggest set using the simulated annealing algorithm 
-        -- Start at some initial "temperature" T
-        -- Define a "cooling schedule T(x)
-        -- Define an energy function Energy(set)
-        -- Define a current_set initial state (vertex set)
-
-        Pseudocode:
-
-        while (not_converged):
-            new_set = (random)
-            Delta_s = Energy(new_set) - Energy(current_set)
-            if (Delta_s < 0):
-                current_set = new_set
-            else with probability P=e^(-Delta_s/T):
-                current_set = new_set
-            T = alpha T
-               
-        >>> g = Graph(4,1,1,True)
-
-        >>> g.annealSolution()
-        Vertex set: [True, True, False, True]
-        Fitness: 9.000
-
-        """
-        # initialize the empty set
-        loud = False # set to True to see debugging output
-        vs = VSet.randomSet(self.sizeN, self.rand)
-        new_set = VSet(vs)
-        not_converged = True
-        T = self.sizeN # temperature
-        i = 1 # iteration count
-        if T < 1000:
-            T = 1000
-        while (not_converged):
-            if loud: print "(1) Iteration: {0}".format(i)
-            if loud: time.sleep(1)
-            new_set = VSet(vs.set)
-            if loud:
-                print "(2) Current set: {0}".format(vs)
-                print "(3) new_set: {0}".format(new_set)
-            tog = random.randrange(self.sizeN)
-            if loud: 
-                print "(4) Toggling new_set vertex: {0}".format(tog)
-                print "(5) new_set now {0}".format(new_set)
-            new_set.toggleVertex(tog)
-            if loud: print "(6) Setting fitness values..."
-            new_set.fitness = self.fitfunc(new_set)
-            if loud: print "(7) new_set done..."
-            vs.fitness = self.fitfunc(vs)
-            if loud:
-                print "(8) old set done..."
-                time.sleep(1)
-                print "(9) new set fitness: {0}".format(new_set.fitness)
-                print "(10) current fitness: {0}".format(vs.fitness)
-            Delta_s = new_set.fitness - vs.fitness
-            if loud: print "(11) Delta_s set to {0}".format(Delta_s)
-            if (Delta_s < 0):
-                vs = new_set
-            P = math.e**(-Delta_s/T)
-            if (P > 0.5): 
-                vs = new_set
-            T -= 1
-            if (T == 0):
-                if loud: print "(**) Set has converged."
-                not_converged = False   
-            i += 1
-            if loud: time.sleep(0.5)
-        vs.fitness = self.fitfunc(vs)
-        return vs
+            s.toggleVertex( v[0] )
+            if self.evaluateSet( s ) == -1:
+                s.toggleVertex( v[0] )
+        s.fitness = self.fitfunc( s )
+        return s
     
     def shallowAnnealing(self):
         """ Generate the biggest set using the simulated annealing algorithm 
         -- Start at some initial "temperature" T
-        -- Define a "cooling schedule T(x)
+        -- Define a "cooling schedule" T(x)
         -- Define an energy function Energy(set)
         -- Define a current_set initial state (vertex set)
 
@@ -358,7 +260,7 @@ class Graph:
         """ Generate the biggest possible independent set of vertices by testing all possibilities 
         
         >>> g = Graph(4,1,1,True)
-
+        
         >>> g.exhaustiveSolution()
         Vertex set: [True, True, False, True]
         Fitness: 9.000
@@ -392,11 +294,13 @@ class Graph:
         return choice
         
     def mutate(self, value, rate=None):
+        """ Mutates a given bit with [rate] liklihood """
         if rate == None:
             return value
         return not value if self.rand.boolBernoulli(rate) else value
     
     def combine(self, group1, group2, mutation):
+        """ Given two parent vertex sets, produce an offspring vertex set by randomly picking between them and mutating """
         return VSet( [self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i,v in enumerate(group1)] )
     
     def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0, fitfunc=None):
@@ -457,6 +361,7 @@ class Graph:
         for t in sorted(population, key=lambda s: s.fitness, reverse=True):
             if self.evaluateSet(t) > 0:
                 best = t
+                break
         #best = max(population, key=lambda s:s.fitness)
         #print "Average fitness before: %.2f"%(avg)
         #print "Average fitness after: %.2f"%(total/popsize)
@@ -464,74 +369,6 @@ class Graph:
         #print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
         #print "Best: %s"%best
         return best
-    
-    def setFitness(self, vset_obj):
-        """ Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 
-        >>> g = Graph(4,1,1,True)
-
-        >>> vs = VSet([1,1,0,1])
-        something_happened!
-
-        """
-        # Skip error test and assume len(set) == sizeN for quickness of algorithm
-        setSize = connections = 0
-        for i in range(self.sizeN):
-            if vset_obj[i] :
-                for j in range(i+1, self.sizeN):
-                    if vset_obj[j] and self.adjMatrix[i][j]:
-                        connections+=1
-                setSize+=1
-        fitness = float(setSize*setSize)-(connections*connections)
-        if fitness < 0: #i need the fitness to remain in the positives...
-            fitness = -1/fitness
-        return fitness
-    
-    def setFitness4(self, set):
-        """ Test the fitness of a passed set: fitness= [set size] - 4*[connections] 
-        
-        These are just fake values for what maybe we might want
-        
-        Algorithm idea: fitness could start at 1 (empty set) then
-        1st unconnected: +2 (3)
-        2nd: +3 (6)
-        3rd: +4 (10)
-        4th: +5 (15) etc...
-        and when the member is found to be connected, score penalty of Nth + (Nth * 1.5)
-
-
-        >>> g = Graph(4,1,1,True)
-
-        >>> g.setFitness4([1,1,0,1]) # "perfect" score: so fit, so clean
-        10
-
-        >>> g.setFitness4([1,1,1,1]) # one-too-many connected (nearly fit)
-        8
-
-        >>> g.setFitness4([1,0,0,1]) # could be better
-        6
-
-        >>> g.setFitness4([1,1,0,0]) # same as above
-        6
-
-        >>> g.setFitness4([0,0,0,1]) # so wrong
-        3
-
-        >>> g.setFitness4([0,0,0,0]) # wtf
-        1
-
-        """
-        # Skip error test and assume len(set) == sizeN for quickness of algorithm
-        setSize = connections = 0
-        for i in range(self.sizeN):
-            if set[i] :
-                for j in range(i+1, self.sizeN):
-                    if set[j] and self.adjMatrix[i][j]:
-                        connections+=1
-                setSize+=1
-        fitness = float(setSize)-(4*connections)
-        if fitness < 0: #i need the fitness to remain in the positives...
-            fitness = -1/fitness
-        return fitness
     
     def triangleFitness(self, set):
         """ Fitness= for i vertexes: sum( [tri] || - 1.5*[tri]).  [tri] = triangle number of ith vertex """
@@ -612,7 +449,7 @@ class Fxrandom:
         return val
     
     def boolBernoulli(self, probability):
-        """ Return an Bernoulli distributed random variable with given probability """
+        """ Return an Bernoulli distributed random bool with given probability """
         num = self.uniform(0.0, 1.0)
         if(num <= probability):
             return True
