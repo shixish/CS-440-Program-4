@@ -253,19 +253,25 @@ class Graph:
     
     def shallowAnnealing(self, coolStep = 0.9):
         """ anneal """
-        frozen = False
-        temp = self.sizeN**6
-        curSet = VSet.emptySet(self.sizeN)
-        newSet = VSet.emptySet(self.sizeN)
-        while not frozen:
-            newSet.toggleVertex( random.randrange(self.sizeN) )
-            energy_change = self.fitfunc(curSet) - self.fitfunc(newSet)
-            if self.boltzmann(energy_change, temp):
-                curSet = VSet( newSet.set )
-            temp = temp * coolStep
-            if temp < 1:
-                frozen = True
-        return curSet
+        bestScore = 0
+        for j in range(self.sizeN*4):
+            frozen = False
+            temp = self.sizeN**8
+            curSet = VSet.emptySet(self.sizeN)
+            newSet = VSet.emptySet(self.sizeN)
+            while not frozen:
+                newSet.toggleVertex( random.randrange(self.sizeN) )
+                energy_change = self.fitfunc(curSet) - self.fitfunc(newSet)
+                if self.boltzmann(energy_change, temp):
+                    curSet = VSet( newSet.set )
+                temp = temp * coolStep
+                if temp < 1:
+                    frozen = True
+                score = self.evaluateSet( curSet )
+                if score > bestScore:
+                    bestScore = score
+                    bestSet = VSet( curSet )
+        return bestSet 
 
     def boltzmann(self, deltaE, T):
         """ calculate the boltzman criterion 
@@ -411,7 +417,7 @@ class Graph:
             #(population, population_fitness) = self.rouletteSelection(combined, popsize, population_fitness+children_fitness)
             #print population
         
-        best = None
+        best = population[0] 
         for i,t in enumerate(population):
             if self.evaluateSet(t) > 0 and (not best or best.fitness < t.fitness):
                 best = t
