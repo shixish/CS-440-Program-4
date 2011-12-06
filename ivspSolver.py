@@ -55,13 +55,19 @@ class VSet:
                 print "" 
     
     def __repr__(self):
-        return "Vertex set: %s\nFitness: %.3f"%(self.set, self.fitness)
+        rep = "VSet(%.3f): "%self.fitness
+        for i,v in enumerate(self.set):
+            rep += "%i"%v
+        return rep
         
     def __getitem__(self, key):
         return self.set[key]
     
     def __setitem__(self, key, value):
         self.set[key] = value
+        
+    def __len__(self):
+        return len(self.set)
     
     @classmethod
     def emptySet(cls, size):
@@ -72,8 +78,7 @@ class VSet:
     def randomSet(cls, size, random, density=.2):
         """ Generates a random set, where individual vertex inclusion has [density] probability """
         return cls( [ random.boolBernoulli(density) for i in range(size) ] )
-
-
+        
 ### Vertex Set Iterator Class ###
 
 class VSetIter:
@@ -301,7 +306,12 @@ class Graph:
     
     def combine(self, group1, group2, mutation):
         """ Given two parent vertex sets, produce an offspring vertex set by randomly picking between them and mutating """
-        return VSet( [self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i,v in enumerate(group1)] )
+        #vset = VSet( [self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i in range(self.sizeN)] )
+        vset = VSet( [group1[i] if self.rand.boolBernoulli(.5) else group2[i] for i in range(self.sizeN)] )
+        if mutation and self.rand.boolBernoulli(mutation):
+            idx = self.rand.uniform(0,self.sizeN-1)
+            vset[idx] = not vset[idx]
+        return vset
     
     def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0, fitfunc=None):
         """ Finds an independent set using a Genetic Algorithm """
@@ -369,6 +379,139 @@ class Graph:
         #print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
         #print "Best: %s"%best
         return best
+        
+    def newRouletteSelection(self, population, popsize, total_fitness):
+        """    Stochastic Sampling (Roulette wheel) method of selecting parents
+            This method requires some extra preperation of the data, and fails when fitness is negative...
+            Source: http://www.cse.unr.edu/~banerjee/selection.htm """
+        choice = [ ]
+        choice_fitness = 0
+        return_population = popsize
+        #combined_size = popsize*2
+        k=0
+        while (k < return_population):
+            partsum = 0
+            parent = 0
+            #print total_fitness
+            randnum = self.rand.uniform(0.0, total_fitness)
+            #for i in range(0, popsize):
+            i = 0
+            while (i < popsize):
+                partsum += population[i].fitness
+                if partsum >= randnum:
+                    parent = i
+                    break
+                i += 1
+            k+=1
+            fitness = population[parent].fitness
+            #print "%i minus %f"%(parent, fitness)
+            total_fitness -= fitness
+            choice.append(population[parent])
+            choice_fitness += fitness
+            popsize -= 1
+            del population[parent]
+        return (choice, choice_fitness)
+        
+    def newRouletteSelection2(self, population, popsize, total_fitness):
+        """    Stochastic Sampling (Roulette wheel) method of selecting parents
+            This method requires some extra preperation of the data, and fails when fitness is negative...
+            Source: http://www.cse.unr.edu/~banerjee/selection.htm """
+        choice = [ ]
+        choice_fitness = 0
+        return_population = popsize
+        #combined_size = popsize*2
+        k=0
+        while (k < return_population):
+            partsum = 0
+            parent = 0
+            #print total_fitness
+            randnum = self.rand.uniform(0.0, total_fitness)
+            for i in range(0, popsize):
+                partsum += population[i].fitness
+                if partsum >= randnum:
+                    parent = i
+                    break
+            k+=1
+            fitness = population[parent].fitness
+            #print "%i minus %f"%(parent, fitness)
+            choice.append(population[parent])
+            choice_fitness += fitness
+        return (choice, choice_fitness)
+        
+    def newGASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0, fitfunc=None):
+        """ Finds an independent set using a Genetic Algorithm """
+        if fitfunc == None:
+            fitfunc = self.fitfunc
+        if not density:
+            density = self.greedySolution().density()*.5
+            print "Using density: %.5f"%density
+        
+        pop_range = range(popsize)
+        population = [None for x in pop_range]
+        children = [None for x in pop_range]
+        combined = []
+        population_fitness = 0.0
+        lastindex = popsize-1
+        #initialize the population
+        for i in pop_range: #initial population
+            s = VSet.randomSet(self.sizeN, self.rand, density)
+            s.fitness = fitfunc(s)
+            population_fitness += s.fitness
+            population[i] = s
+        
+        print "Average fitness before: %.2f"%(population_fitness/popsize)
+        for g in range(generations):
+            children_fitness = 0
+            for i in pop_range:
+                rand1 = int(self.rand.uniform(0, lastindex))
+                rand2 = int(self.rand.uniform(0, lastindex))
+                while rand1 == rand2:
+                    rand2 = int(self.rand.uniform(0, lastindex))
+                
+                #set1 = population[rand1]
+                #set2 = population[rand2]
+                s = self.combine(population[rand1], population[rand2], mutation=mutation)
+                s.fitness = fitfunc(s)
+                children_fitness += s.fitness
+                children[i] = s
+                
+            combined = population + children
+            
+            '''total_fitness = 0.0
+            for i,v in enumerate(combined):
+                print "i:%i %s"%(i, v)
+                total_fitness += v.fitness
+            
+            print "fitness!! %f %f"%(total_fitness, population_fitness+children_fitness)
+            '''
+            '''
+            #this is more shitty!
+            random.shuffle(combined)
+            
+            combined_len = popsize*2
+            for i in pop_range:
+                other = i+popsize
+                if combined[i].fitness > combined[other].fitness:
+                    population[i] = combined[i]
+                else:
+                    population[i] = combined[i]
+            '''
+            (population, population_fitness) = self.newRouletteSelection2(combined, popsize, population_fitness+children_fitness)
+            #print population
+        
+        best = "No valid solution found!"
+        sorted_population = sorted(population, key=lambda s: s.fitness, reverse=True)
+        for t in sorted(population, key=lambda s: s.fitness, reverse=True):
+            if self.evaluateSet(t) > 0:
+                best = t
+                break
+        best = max(population, key=lambda s:s.fitness)
+        print "Average fitness after: %.2f"%(population_fitness/popsize)
+        print "Highest fitness: %.2f"%(sorted_population[0].fitness)
+        print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
+        print "Best: %s"%best
+        return best
+        
     
     def triangleFitness(self, s):
         """ Fitness= for i vertexes: sum( [tri] || - 1.5*[tri]).  [tri] = triangle number of ith vertex """
