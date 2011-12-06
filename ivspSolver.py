@@ -295,18 +295,22 @@ class Graph:
         """ Use branch and bound to quickly find optimal solution  """
         cur_sets = [ ]
         next_sets = [ VSet.emptySet( self.sizeN ) ]
+        bestScore = 0
         while( len(next_sets) > 0):
-            print next_sets
             cur_sets = next_sets
             next_sets = []
             for cs in cur_sets:
-                for i, v in enumerate(cs.set):
+                for i in range(self.sizeN):
                     if not cs[i]:
-                        ns = VSet( cs )
-                        ns.toggleVertex( i )
-                        if self.evaluateSet( ns ) != -1:
-                            next_sets.append( ns )
-        return next_sets
+                        cs.toggleVertex( i )
+                        score = self.evaluateSet( cs )
+                        if score != -1.0:
+                            next_sets.append( VSet( cs ) )
+                            if score > bestScore:
+                                bestScore = score
+                                bestSet = VSet( cs ) 
+                        cs.toggleVertex( i )
+        return bestSet
                         
     
     def mutate(self, value, rate=None):
@@ -356,7 +360,7 @@ class Graph:
             fitfunc = self.fitfunc
         if not density:
             density = self.greedySolution().density()*.5
-            print "Using density: %.5f"%density
+            # print "Using density: %.5f"%density
         
         pop_range = range(popsize)
         population = [None for x in pop_range]
@@ -371,7 +375,7 @@ class Graph:
             population_fitness += s.fitness
             population[i] = s
         
-        print "Average fitness before: %.2f"%(population_fitness/popsize)
+        # print "Average fitness before: %.2f"%(population_fitness/popsize)
         for g in range(generations):
             children_fitness = 0
             for i in pop_range:
@@ -408,10 +412,10 @@ class Graph:
             if self.evaluateSet(t) > 0 and (not best or best.fitness < t.fitness):
                 best = t
                 break
-        print "Average fitness after: %.2f"%(population_fitness/popsize)
+        #print "Average fitness after: %.2f"%(population_fitness/popsize)
         #print "Highest fitness: %.2f"%(sorted_population[0].fitness)
         #print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
-        print "Best: %s"%best
+        #print "Best: %s"%best
         #print population
         return best       
     

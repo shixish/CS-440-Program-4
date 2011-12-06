@@ -7,7 +7,7 @@ from ivspSolver import *
 for i in range(4, 27):
     print "Vertex Set Size: ", i
     g = Graph(i, .15)
-    g.fitfunc = g.tobyFitness
+    g.fitfunc = g.goodFitness
     
     # Exhaustive 
     before = datetime.datetime.now()
@@ -18,6 +18,14 @@ for i in range(4, 27):
     after = datetime.datetime.now()
     print "Exhaustive score:".rjust(20), str(eScore).rjust(3), " in", str(after-before)
     
+    # B&B 
+    before = datetime.datetime.now()
+
+    vs = g.branchAndBound()
+    bScore = g.evaluateSet(vs)
+    
+    after = datetime.datetime.now()
+    print "B&B score:".rjust(20), str(bScore).rjust(3), " in", str(after-before)
     
     # Greedy 
     before = datetime.datetime.now()
