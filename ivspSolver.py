@@ -375,7 +375,7 @@ class Graph:
                 else:
                     population[i] = combined[i]
             '''
-            (population, population_fitness) = self.newRouletteSelection(combined, popsize, population_fitness+children_fitness)
+            (population, population_fitness) = self.rouletteSelection(combined, popsize, population_fitness+children_fitness)
             #print population
         
         best = None
@@ -466,14 +466,18 @@ class Graph:
         setSize = 0
         independent = True
         for i in range(self.sizeN):
-            if vset[i] :
-                for j in range(i+1, self.sizeN):
-                    if vset[j] and self.adjMatrix[i][j]:
-                        independent = False
+            try:
+                if vset[i] :
+                    for j in range(i+1, self.sizeN):
+                        if vset[j] and self.adjMatrix[i][j]:
+                            independent = False
+                            break
+                    if not independent: 
                         break
-                if not independent: 
-                    break
-                setSize+=1
+                    setSize+=1
+            except TypeError, e:
+                print "BROKEN!!! {0}".format(e)
+                exit(1)
         if independent:
             return setSize
         return -1
