@@ -58,7 +58,7 @@ class VSet:
         rep = "VSet(%.3f): "%self.fitness
         for i,v in enumerate(self.set):
             rep += "%i"%v
-        return rep
+        return rep+"\n"
         
     def __getitem__(self, key):
         return self.set[key]
@@ -167,7 +167,7 @@ class Graph:
             self.sizeN = size
             self.rand = Fxrandom(seed)
             if fitfunc == None:
-                fitfunc = self.triangleFitness
+                fitfunc = self.goodFitness
             self.fitfunc = fitfunc #define a global fit function to use by default...
             # print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
             
@@ -325,7 +325,7 @@ class Graph:
             choice_fitness += fitness
         return (choice, choice_fitness)
         
-    def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0, fitfunc=None):
+    def GASolution(self, popsize=100, generations=300, density=None, mutation=0.01, preserve=0, fitfunc=None):
         """ Finds an independent set using a Genetic Algorithm """
         if fitfunc == None:
             fitfunc = self.fitfunc
@@ -363,7 +363,7 @@ class Graph:
                 children[i] = s
                 
             combined = population + children
-            '''
+            
             #this is more shitty!
             random.shuffle(combined)
             
@@ -373,9 +373,9 @@ class Graph:
                 if combined[i].fitness > combined[other].fitness:
                     population[i] = combined[i]
                 else:
-                    population[i] = combined[i]
-            '''
-            (population, population_fitness) = self.rouletteSelection(combined, popsize, population_fitness+children_fitness)
+                    population[i] = combined[other]
+            
+            #(population, population_fitness) = self.rouletteSelection(combined, popsize, population_fitness+children_fitness)
             #print population
         
         best = None
@@ -387,8 +387,8 @@ class Graph:
         #print "Highest fitness: %.2f"%(sorted_population[0].fitness)
         #print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
         print "Best: %s"%best
-        return best
-        
+        #print population
+        return best       
     
     def triangleFitness(self, s):
         """ Fitness= for i vertexes: sum( [tri] || - 1.5*[tri]).  [tri] = triangle number of ith vertex """
@@ -410,7 +410,7 @@ class Graph:
             fitness = -1.0/fitness
         return fitness
     
-    def tobyFitness(self, s):
+    def goodFitness(self, s):
         # Skip error test and assume len(s) == sizeN for quickness of algorithm
         setSize = fitness = 0.0
         valid = invalid = missingValids = 0.0
