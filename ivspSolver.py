@@ -216,7 +216,7 @@ class Graph:
         s.fitness = self.fitfunc( s )
         return s
     
-    def shallowAnnealing(self, coolStep=0.85):
+    def shallowAnnealingOld(self, coolStep=0.85):
         """ Generate the biggest set using the simulated annealing algorithm 
         -- Start at some initial "temperature" T
         -- Define a "cooling schedule" T(x)
@@ -273,6 +273,11 @@ class Graph:
         bestSet.fitness = self.fitfunc(bestSet)
         return bestSet
     
+    def shallowAnnealing(self, coolStep = 0.8):
+        """ anneal """
+        frozen = False
+        return
+
     def boltzmann(self, deltaE, T):
         """ calculate the boltzman criterion 
         Return True if move accepted, False otherwise
