@@ -31,19 +31,19 @@ for cnn in [.05, .1, .15, .2]:
     anlog += str(cnn) + "\t" + str(aScore) + "\t" + str((after-before).total_seconds()) + "\n"
     
     comblog += str(cnn) + "\t" + str(gScore) + "\t" + str(gaScore) + "\t" + str(aScore) + "\n"
+    
+    f = open("greedy.log", "w+")
+    f.write( grlog )
+    f.close()
 
-f = open("greedy.log", "w")
-f.write( grlog )
-f.close()
+    f = open("ga.log", "w+")
+    f.write( galog )
+    f.close()
 
-f = open("ga.log", "w")
-f.write( galog )
-f.close()
+    f = open("an.log", "w+")
+    f.write( anlog )
+    f.close()
 
-f = open("an.log", "w")
-f.write( anlog )
-f.close()
-
-f = open("comb.log", "w")
-f.write( comblog )
-f.close()
+    f = open("comb.log", "w+")
+    f.write( comblog )
+    f.close()
