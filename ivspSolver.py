@@ -183,6 +183,11 @@ class Graph:
                     self.adjMatrix[i][j] = self.adjMatrix[j][i] = self.rand.boolBernoulli(cnn)
                 # Debug code
                 #print self.adjMatrix[i]
+                
+            self.vrank = [0 for j in range(self.sizeN)] 
+            for i, row in enumerate(self.adjMatrix):
+                self.vrank[i] = row.count(True)
+            #self.vrank = sorted(self.vrank, key=lambda v: v[1] )
     
     def greedySolution(self):
         """ 
@@ -199,9 +204,9 @@ class Graph:
         # Rank the vertexes by their connectedness
         vrank = []
         for i, row in enumerate(self.adjMatrix):
-            vrank.append( [i, row.count(True) ])
+            vrank.append( [i, self.vrank[i] ])
         vrank = sorted( vrank, key=lambda v: v[1] )
-        
+                
         # Try to add each vector from lowest connectedness up.  
         # If the vector breaks the set, toggle it back.
         for v in vrank:
@@ -279,25 +284,6 @@ class Graph:
         maxSet.fitness = self.fitfunc(maxSet)
         return maxSet
     
-    def rouletteSelection(self, popsel, popnumber):
-        """    Stochastic Sampling (Roulette wheel) method of selecting parents
-            This method requires some extra preperation of the data, and fails when fitness is negative...
-            Source: http://www.cse.unr.edu/~banerjee/selection.htm """
-        choice = [ ]
-        k=0
-        while (k < popnumber):
-            partsum = 0
-            parent = 0
-            randnum = self.rand.uniform(0.0, 1.0)
-            for i in range(0, popnumber):
-                partsum += popsel[i].rank
-                if partsum >= randnum:
-                    parent = i
-                    break
-            k+=1
-            choice.append(parent)
-        return choice
-        
     def mutate(self, value, rate=None):
         """ Mutates a given bit with [rate] liklihood """
         if rate == None:
@@ -309,110 +295,11 @@ class Graph:
         #vset = VSet( [self.mutate(group1[i] if self.rand.boolBernoulli(.5) else group2[i], mutation) for i in range(self.sizeN)] )
         vset = VSet( [group1[i] if self.rand.boolBernoulli(.5) else group2[i] for i in range(self.sizeN)] )
         if mutation and self.rand.boolBernoulli(mutation):
-            idx = self.rand.uniform(0,self.sizeN-1)
+            idx = int(self.rand.uniform(0,self.sizeN))
             vset[idx] = not vset[idx]
         return vset
-    
-    def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0, fitfunc=None):
-        """ Finds an independent set using a Genetic Algorithm """
-        if fitfunc == None:
-            fitfunc = self.fitfunc
-        if not density:
-            density = self.greedySolution().density()*.25
-            # print "Using density: %.5f"%density
-        population = []
-        total = 0.0
-        #initialize the population
-        for i in range(popsize):
-            s = VSet.randomSet(self.sizeN, self.rand, density)
-            s.fitness = fitfunc(s)
-            total += s.fitness
-            population.append(s)
         
-        if total == 0:
-            print "Failure! Total fitness is zero... Something went wrong here."
-            return
-        
-        avg = total/popsize
-        # print "Average before: %.2f"%(avg)
-        # sys.stdout.write("Epoc: ")
-        for g in range(generations):
-            
-            for p in population:
-                p.rank = p.fitness/total #produces a percentage for weighting the roulette...
-                
-            if preserve > 0:
-                population = sorted(population, key=lambda s: s.fitness, reverse=True)
-            
-            randpop = popsize-preserve
-            males = self.rouletteSelection(population, randpop)
-            females = self.rouletteSelection(population, randpop)
-            
-            total = 0.0
-            for i in range(randpop):
-                s = self.combine(population[males[i]], population[females[i]], mutation=mutation)
-                s.fitness = fitfunc(s)
-                total += s.fitness
-                population[preserve+i] = s
-        
-            #population = [VSet.randomSet(self.sizeN, self.rand) for i in range(popsize)]
-            #for i, s in enumerate(siblings):
-            #    s.rank = self.evaluateSet(s)
-            
-            # sys.stdout.write("%i "%g)
-            # sys.stdout.flush()
-        # sys.stdout.write("\n")
-        
-        #for i,s in enumerate(population):
-        #    print "%i: %.8f"%(i,s.rank)
-            #print "%i: %.1f %s"%(i,s.rank, s)
-        best = "No valid solution found!"
-        sorted_population = sorted(population, key=lambda s: s.fitness, reverse=True)
-        for t in sorted(population, key=lambda s: s.fitness, reverse=True):
-            if self.evaluateSet(t) > 0:
-                best = t
-                break
-        #best = max(population, key=lambda s:s.fitness)
-        #print "Average fitness before: %.2f"%(avg)
-        #print "Average fitness after: %.2f"%(total/popsize)
-        #print "Highest fitness: %.2f"%(sorted_population[0].fitness)
-        #print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
-        #print "Best: %s"%best
-        return best
-        
-    def newRouletteSelection(self, population, popsize, total_fitness):
-        """    Stochastic Sampling (Roulette wheel) method of selecting parents
-            This method requires some extra preperation of the data, and fails when fitness is negative...
-            Source: http://www.cse.unr.edu/~banerjee/selection.htm """
-        choice = [ ]
-        choice_fitness = 0
-        return_population = popsize
-        #combined_size = popsize*2
-        k=0
-        while (k < return_population):
-            partsum = 0
-            parent = 0
-            #print total_fitness
-            randnum = self.rand.uniform(0.0, total_fitness)
-            #for i in range(0, popsize):
-            i = 0
-            while (i < popsize):
-                partsum += population[i].fitness
-                if partsum >= randnum:
-                    parent = i
-                    break
-                i += 1
-            k+=1
-            fitness = population[parent].fitness
-            #print "%i minus %f"%(parent, fitness)
-            total_fitness -= fitness
-            choice.append(population[parent])
-            choice_fitness += fitness
-            popsize -= 1
-            del population[parent]
-        return (choice, choice_fitness)
-        
-    def newRouletteSelection2(self, population, popsize, total_fitness):
+    def rouletteSelection(self, population, popsize, total_fitness):
         """    Stochastic Sampling (Roulette wheel) method of selecting parents
             This method requires some extra preperation of the data, and fails when fitness is negative...
             Source: http://www.cse.unr.edu/~banerjee/selection.htm """
@@ -438,7 +325,7 @@ class Graph:
             choice_fitness += fitness
         return (choice, choice_fitness)
         
-    def newGASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0, fitfunc=None):
+    def GASolution(self, popsize=100, generations=50, density=None, mutation=None, preserve=0, fitfunc=None):
         """ Finds an independent set using a Genetic Algorithm """
         if fitfunc == None:
             fitfunc = self.fitfunc
@@ -476,14 +363,6 @@ class Graph:
                 children[i] = s
                 
             combined = population + children
-            
-            '''total_fitness = 0.0
-            for i,v in enumerate(combined):
-                print "i:%i %s"%(i, v)
-                total_fitness += v.fitness
-            
-            print "fitness!! %f %f"%(total_fitness, population_fitness+children_fitness)
-            '''
             '''
             #this is more shitty!
             random.shuffle(combined)
@@ -496,19 +375,17 @@ class Graph:
                 else:
                     population[i] = combined[i]
             '''
-            (population, population_fitness) = self.newRouletteSelection2(combined, popsize, population_fitness+children_fitness)
+            (population, population_fitness) = self.newRouletteSelection(combined, popsize, population_fitness+children_fitness)
             #print population
         
-        best = "No valid solution found!"
-        sorted_population = sorted(population, key=lambda s: s.fitness, reverse=True)
-        for t in sorted(population, key=lambda s: s.fitness, reverse=True):
-            if self.evaluateSet(t) > 0:
+        best = None
+        for i,t in enumerate(population):
+            if self.evaluateSet(t) > 0 and (not best or best.fitness < t.fitness):
                 best = t
                 break
-        best = max(population, key=lambda s:s.fitness)
         print "Average fitness after: %.2f"%(population_fitness/popsize)
-        print "Highest fitness: %.2f"%(sorted_population[0].fitness)
-        print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
+        #print "Highest fitness: %.2f"%(sorted_population[0].fitness)
+        #print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
         print "Best: %s"%best
         return best
         
@@ -554,6 +431,34 @@ class Graph:
         #return (( setSize )**2) / ( (invalid+1)**2)  # works at low numbers
         # return ( setSize ) / (invalid+1) # works at low numbers
         return ( valid ) / (invalid+1)
+        
+    def setFitness(self, vset_obj):
+        """ Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 
+        >>> g = Graph(4,1,1,True)
+
+        >>> vs = VSet([1,1,0,1])
+        something_happened!
+
+        """
+        # Skip error test and assume len(set) == sizeN for quickness of algorithm
+        setSize = connections = 0
+        for i in range(self.sizeN):
+            if vset_obj[i] :
+                for j in range(i+1, self.sizeN):
+                    if vset_obj[j] and self.adjMatrix[i][j]:
+                        connections+=1
+                setSize+=1
+        fitness = float(setSize*setSize)-(connections*connections)
+        if fitness < 0: #i need the fitness to remain in the positives...
+            fitness = -1/fitness
+        vset_obj.fitness = fitness
+        return fitness
+        
+    def ev(self, vs):
+        fitness = self.evaluateSet(vs)
+        if fitness < 0:
+            fitness = 0
+        return fitness
     
     def evaluateSet(self, vset):
         """ Test to see if a passed set is independent, if yes, size of set is returned, -1 elsewise """
