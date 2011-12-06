@@ -251,38 +251,31 @@ class Graph:
         bestSet.fitness = self.fitfunc(bestSet)
         return bestSet
     
-    def shallowAnnealing(self, coolStep = 0.95):
+    def shallowAnnealing(self, coolStep = 0.90):
         """ anneal """
         bestSet = VSet.emptySet( self.sizeN )
         bestScore = 0
-        for j in range(self.sizeN*3):
+        for j in range(self.sizeN*20):
             frozen = False
-            temp = self.sizeN
-            curSet = VSet.emptySet(self.sizeN)
-            newSet = VSet.emptySet(self.sizeN)
+            T = self.sizeN
+            curSet = VSet.randomSet( self.sizeN, self.rand, self.cnn/2)
+            newSet = VSet( curSet )
             while not frozen:
                 newSet.toggleVertex( random.randrange(self.sizeN) )
-                energy_change = self.fitfunc(curSet) - self.fitfunc(newSet)
-                if energy_change<0:
-                    curSet = VSet( newSet.set )
-                elif self.boltzmann(energy_change, temp):
-                    curSet = VSet( newSet.set )
-                temp *= coolStep
-                if temp < 1:
+                newSet.toggleVertex( random.randrange(self.sizeN) )
+                dE = self.fitfunc(curSet) - self.fitfunc(newSet)
+                if dE<0:
+                    curSet = VSet( newSet )
+                elif self.rand.boolBernoulli( math.exp( - dE / T ) ):
+                    curSet = VSet( newSet )
+                T *= coolStep
+                if T < self.sizeN/10:
                     frozen = True
             score = self.evaluateSet( curSet )
             if score > bestScore:
                 bestScore = score
                 bestSet = VSet( curSet )
         return bestSet 
-
-    def boltzmann(self, deltaE, T):
-        """ calculate the boltzman criterion 
-        Return True if move accepted, False otherwise
-        """
-        n = random.random()
-        b = math.e**( - deltaE / T )
-        return n < b
 
     def exhaustiveSolution(self):
         """ Generate the biggest possible independent set of vertices by testing all possibilities 
@@ -483,7 +476,7 @@ class Graph:
                     if s[j] and self.adjMatrix[i][j]:
                         conn += 1
                 setSize+=1
-        return (( setSize )**2) / ( (conn+1)**2)  # works at low numbers
+        return (( setSize )**2) / ( (conn+1)**2) 
 
     def setFitness(self, vset_obj):
         """ Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 
