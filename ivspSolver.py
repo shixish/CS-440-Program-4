@@ -255,7 +255,7 @@ class Graph:
         """ anneal """
         bestSet = VSet.emptySet( self.sizeN )
         bestScore = 0
-        for j in range(self.sizeN*20):
+        for j in range(self.sizeN*25):
             frozen = False
             T = self.sizeN
             curSet = VSet.randomSet( self.sizeN, self.rand, self.cnn/2)
