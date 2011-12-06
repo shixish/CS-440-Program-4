@@ -525,7 +525,8 @@ class Graph:
                         break
                     setSize+=1
             except TypeError, e:
-                print "BROKEN!!! {0}".format(e)
+                print "EVALUATE SET BROKEN: {0}".format(e)
+                print "Graph: {0}".format(self)
                 exit(1)
         if independent:
             return setSize
