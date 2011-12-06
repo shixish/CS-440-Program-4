@@ -273,6 +273,14 @@ class Graph:
         bestSet.fitness = self.fitfunc(bestSet)
         return bestSet
     
+    def boltzmann(self, deltaE, T):
+        """ calculate the boltzman criterion 
+        Return True if move accepted, False otherwise
+        """
+        n = random.random()
+        b = math.e**( - deltaE / T )
+        return n < b
+
     def exhaustiveSolution(self):
         """ Generate the biggest possible independent set of vertices by testing all possibilities 
         
