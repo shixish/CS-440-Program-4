@@ -368,17 +368,19 @@ class Graph:
         if fitfunc == None:
             fitfunc = self.fitfunc
         if not density:
+            """ if no density is set, run greedy and just use a fraction of the density of the set returned"""
             density = self.greedySolution().density()*.5
             print "Using density: %.5f"%density
         
-        pop_range = range(popsize)
-        population = [None for x in pop_range]
+        pop_range = range(popsize) #avoid remaking this list a bunch of times
+        population = [None for x in pop_range] #initialize the list so i don't have to append a million times
         children = [None for x in pop_range]
         combined = []
-        population_fitness = 0.0
-        lastindex = popsize-1
-        #initialize the population
-        for i in pop_range: #initial population
+        population_fitness = 0.0 #stores the current population's fitness total, used in roulette selection
+        #lastindex = popsize-1
+        
+        """initialize the population"""
+        for i in pop_range:
             s = VSet.randomSet(self.sizeN, self.rand, density)
             s.fitness = fitfunc(s)
             population_fitness += s.fitness
@@ -386,12 +388,12 @@ class Graph:
         
         print "Average fitness before: %.2f"%(population_fitness/popsize)
         for g in range(generations):
-            children_fitness = 0
+            children_fitness = 0 #stores the total fitness for the children genomes
             for i in pop_range:
-                rand1 = int(self.rand.uniform(0, lastindex))
-                rand2 = int(self.rand.uniform(0, lastindex))
+                rand1 = int(self.rand.uniform(0, popsize))
+                rand2 = int(self.rand.uniform(0, popsize))
                 while rand1 == rand2:
-                    rand2 = int(self.rand.uniform(0, lastindex))
+                    rand2 = int(self.rand.uniform(0, popsize))
                 
                 #set1 = population[rand1]
                 #set2 = population[rand2]
@@ -421,10 +423,10 @@ class Graph:
             if self.evaluateSet(t) > 0 and (not best or best.fitness < t.fitness):
                 best = t
                 break
-        print "Average fitness after: %.2f"%(population_fitness/popsize)
+        #print "Average fitness after: %.2f"%(population_fitness/popsize)
         #print "Highest fitness: %.2f"%(sorted_population[0].fitness)
         #print "Lowest fitness: %.2f"%(sorted_population[-1].fitness)
-        print "Best: %s"%best
+        #print "Best: %s"%best
         #print population
         return best       
     
