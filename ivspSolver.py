@@ -375,7 +375,7 @@ class Graph:
                 else:
                     population[i] = combined[i]
             '''
-            (population, population_fitness) = self.newRouletteSelection(combined, popsize, population_fitness+children_fitness)
+            (population, population_fitness) = self.rouletteSelection(combined, popsize, population_fitness+children_fitness)
             #print population
         
         best = None
@@ -428,9 +428,9 @@ class Graph:
                 setSize+=1
             else:
                 missingValids +=1
-        #return (( setSize )**2) / ( (invalid+1)**2)  # works at low numbers
+        return (( setSize )**2) / ( (invalid+1)**2)  # works at low numbers
         # return ( setSize ) / (invalid+1) # works at low numbers
-        return ( valid ) / (invalid+1)
+        #return ( valid ) / (invalid+1)
         
     def setFitness(self, vset_obj):
         """ Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 
