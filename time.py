@@ -4,39 +4,39 @@ import datetime
 import ivspSolver
 from ivspSolver import *
 
-for i in range(4, 27):
+for i in range(10, 27):
     print "Vertex Set Size: ", i
     g = Graph(i, .15)
-    g.fitfunc = g.tobyFitness
+    g.fitfunc = g.goodFitness
     
     # Exhaustive 
-    before = datetime.datetime.now()
+    #before = datetime.datetime.now()
 
-    vs = g.exhaustiveSolution()
-    eScore = g.evaluateSet(vs)
+    #vs = g.exhaustiveSolution()
+    #eScore = g.evaluateSet(vs)
     
-    after = datetime.datetime.now()
-    print "Exhaustive score:".rjust(20), str(eScore).rjust(3), " in", str(after-before)
+    #after = datetime.datetime.now()
+    #print "Exhaustive score:".rjust(20), str(eScore).rjust(3), " in", str(after-before)
     
     
     # Greedy 
-    before = datetime.datetime.now()
+    #before = datetime.datetime.now()
     
-    vs = g.greedySolution()
-    gScore = g.evaluateSet(vs)
+    #vs = g.greedySolution()
+    #gScore = g.evaluateSet(vs)
     
-    after = datetime.datetime.now()
-    print "Greedy score:".rjust(20), str(gScore).rjust(3), " in", str(after-before)
+    #after = datetime.datetime.now()
+    #print "Greedy score:".rjust(20), str(gScore).rjust(3), " in", str(after-before)
     
     
     # GA 
-    before = datetime.datetime.now()
+    #before = datetime.datetime.now()
     
-    vs = g.GASolution(popsize=i*4, generations=i*3, mutation=.05)
-    gaScore = g.evaluateSet(vs)
+    #vs = g.GASolution(popsize=i*4, generations=i*3, mutation=.05)
+    #gaScore = g.evaluateSet(vs)
     
-    after = datetime.datetime.now()
-    print "GA score:".rjust(20), str(gaScore).rjust(3), " in", str(after-before)
+    #after = datetime.datetime.now()
+    #print "GA score:".rjust(20), str(gaScore).rjust(3), " in", str(after-before)
     
     before = datetime.datetime.now()
 
