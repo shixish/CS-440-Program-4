@@ -216,7 +216,7 @@ class Graph:
         s.fitness = self.fitfunc( s )
         return s
     
-    def shallowAnnealing(self, coolStep=.1):
+    def shallowAnnealing(self, coolStep=0.85):
         """ Generate the biggest set using the simulated annealing algorithm 
         -- Start at some initial "temperature" T
         -- Define a "cooling schedule" T(x)
@@ -243,7 +243,7 @@ class Graph:
         """
         bestScore = 0
         for j in range(self.sizeN*2):
-            T = self.sizeN
+            T = self.sizeN**4
             curSet = VSet.randomSet(self.sizeN, self.rand)
             
             not_converged = True
@@ -253,11 +253,18 @@ class Graph:
                 Delta_s = self.fitfunc(curSet) - self.fitfunc(newSet)
                 if (Delta_s < 0):
                     curSet = newSet
-                P = math.e**(-Delta_s/T)
+                try:
+                    P = math.e**(-Delta_s/T)
+                except OverflowError, e:
+                    print "ERROR: OVERFLOW"
+                    print "e = {0:.3f}".format(math.e)
+                    print "Delta_s = {0:.3f}".format(Delta_s)
+                    print "T = {0:.3f}".format(T)
+                    print "Delta_s/T = {0:.3f}".format(Delta_s/T)
                 if (self.rand.boolBernoulli( P )): 
                     curSet = newSet
-                T -= coolStep
-                if T <= 1.0:
+                T = T * coolStep
+                if T <= 1:
                     not_converged = False
             endScore = self.fitfunc( curSet )
             if endScore > bestScore:
