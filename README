@@ -1,0 +1,27 @@
+For a graph with connectivity of 15%, how many vertices can the graph include so that the independent set problem can be solved in under an hour?
+28-29 vertices
+
+What is the runtime efficiency of the exhaustive search?
+O(2^n)
+
+For the greedy search, assume you have graphs of 100 nodes. Answer the following questions:
+o What is the runtime efficiency of your greedy search algorithm?
+o What is the average and standard deviation of the performance of the greedy search algorithm for graphs randomly created at the following levels of connectivity: 5%, 10%, 15%, 20%. Take at least 20 samples at each level of connectivity (run the greedy algorithm on 20 randomly created graphs at each
+level).
+
+
+What other optimization algorithm did you select, and why did you select it?
+We selected simulated annealing because it is a powerful algorithm well suited for complicated problems of this nature...
+We thought this would be a good opportunity to try out this algorithm for the first time, and just see what it can do.
+
+What is the average performance of the GA at various levels of connectivity?
+
+
+What is the average performance of the third algorithm at various levels of connectivity?
+
+
+If the greedy algorithm, the GA, and your third algorithm are both run on the same graph, how often and by how much does the GA and your algorithm beat the performance of the greedy algorithm? How does the performance of the GA compare to that of your algorithm? 
+
+
+Include anything else you think is interesting or relevant in your report.
+We had a lot of trouble figuring out the best fitness function to use. We did an aweful lot of tweaking on the basic algorithms to get them to perform better. We also decided to implement a branch-and-bound algorithm simply because we realized how awesome it would be for this problem.
