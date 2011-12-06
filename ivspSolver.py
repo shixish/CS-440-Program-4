@@ -218,28 +218,6 @@ class Graph:
     
     def shallowAnnealingOld(self, coolStep=0.85):
         """ Generate the biggest set using the simulated annealing algorithm 
-        -- Start at some initial "temperature" T
-        -- Define a "cooling schedule" T(x)
-        -- Define an energy function Energy(set)
-        -- Define a current_set initial state (vertex set)
-
-        Pseudocode:
-
-        while (not_converged):
-            new_set = (random)
-            Delta_s = Energy(new_set) - Energy(current_set)
-            if (Delta_s < 0):
-                current_set = new_set
-            else with probability P=e^(-Delta_s/T):
-                current_set = new_set
-            T = alpha T
-               
-        >>> g = Graph(4,1,1,True)
-
-        >>> g.annealSolution()
-        Vertex set: [True, True, False, True]
-        Fitness: 9.000
-
         """
         bestScore = 0
         for j in range(self.sizeN*2):
@@ -273,12 +251,12 @@ class Graph:
         bestSet.fitness = self.fitfunc(bestSet)
         return bestSet
     
-    def shallowAnnealing(self, coolStep = 0.8):
+    def shallowAnnealing(self, coolStep = 0.9):
         """ anneal """
         frozen = False
-        temp = self.sizeN**4
-        curSet = VSet.randomSet(self.sizeN, self.rand)
-        newSet = VSet( curSet.set )
+        temp = self.sizeN**6
+        curSet = VSet.emptySet(self.sizeN)
+        newSet = VSet.emptySet(self.sizeN)
         while not frozen:
             newSet.toggleVertex( random.randrange(self.sizeN) )
             energy_change = self.fitfunc(curSet) - self.fitfunc(newSet)
@@ -287,7 +265,7 @@ class Graph:
             temp = temp * coolStep
             if temp < 1:
                 frozen = True
-        return
+        return curSet
 
     def boltzmann(self, deltaE, T):
         """ calculate the boltzman criterion 
