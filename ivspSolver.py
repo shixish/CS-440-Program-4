@@ -284,6 +284,24 @@ class Graph:
         maxSet.fitness = self.fitfunc(maxSet)
         return maxSet
     
+    def branchAndBound(self):
+        """ Use branch and bound to quickly find optimal solution  """
+        cur_sets = [ ]
+        next_sets = [ VSet.emptySet( self.sizeN ) ]
+        while( len(next_sets) > 0):
+            print next_sets
+            cur_sets = next_sets
+            next_sets = []
+            for cs in cur_sets:
+                for i, v in enumerate(cs.set):
+                    if not cs[i]:
+                        ns = VSet( cs )
+                        ns.toggleVertex( i )
+                        if self.evaluateSet( ns ) != -1:
+                            next_sets.append( ns )
+        return next_sets
+                        
+    
     def mutate(self, value, rate=None):
         """ Mutates a given bit with [rate] liklihood """
         if rate == None:
