@@ -276,6 +276,17 @@ class Graph:
     def shallowAnnealing(self, coolStep = 0.8):
         """ anneal """
         frozen = False
+        temp = self.sizeN**4
+        curSet = VSet.randomSet(self.sizeN, self.rand)
+        newSet = VSet( curSet.set )
+        while not frozen:
+            newSet.toggleVertex( random.randrange(self.sizeN) )
+            energy_change = self.fitfunc(curSet) - self.fitfunc(newSet)
+            if self.boltzmann(energy_change, temp):
+                curSet = VSet( newSet.set )
+            temp = temp * coolStep
+            if temp < 1:
+                frozen = True
         return
 
     def boltzmann(self, deltaE, T):
