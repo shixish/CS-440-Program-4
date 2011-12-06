@@ -251,26 +251,29 @@ class Graph:
         bestSet.fitness = self.fitfunc(bestSet)
         return bestSet
     
-    def shallowAnnealing(self, coolStep = 0.9):
+    def shallowAnnealing(self, coolStep = 0.95):
         """ anneal """
+        bestSet = VSet.emptySet( self.sizeN )
         bestScore = 0
-        for j in range(self.sizeN*4):
+        for j in range(self.sizeN*3):
             frozen = False
-            temp = self.sizeN**8
+            temp = self.sizeN
             curSet = VSet.emptySet(self.sizeN)
             newSet = VSet.emptySet(self.sizeN)
             while not frozen:
                 newSet.toggleVertex( random.randrange(self.sizeN) )
                 energy_change = self.fitfunc(curSet) - self.fitfunc(newSet)
-                if self.boltzmann(energy_change, temp):
+                if energy_change<0:
                     curSet = VSet( newSet.set )
-                temp = temp * coolStep
+                elif self.boltzmann(energy_change, temp):
+                    curSet = VSet( newSet.set )
+                temp *= coolStep
                 if temp < 1:
                     frozen = True
-                score = self.evaluateSet( curSet )
-                if score > bestScore:
-                    bestScore = score
-                    bestSet = VSet( curSet )
+            score = self.evaluateSet( curSet )
+            if score > bestScore:
+                bestScore = score
+                bestSet = VSet( curSet )
         return bestSet 
 
     def boltzmann(self, deltaE, T):
@@ -470,7 +473,18 @@ class Graph:
         return (( setSize )**2) / ( (invalid+1)**2)  # works at low numbers
         # return ( setSize ) / (invalid+1) # works at low numbers
         #return ( valid ) / (invalid+1)
-        
+     
+    def connFitness(self, s):
+        # Skip error test and assume len(s) == sizeN for quickness of algorithm
+        setSize = conn =  0.0
+        for i in range(self.sizeN):
+            if s[i] :
+                for j in range(i+1, self.sizeN):
+                    if s[j] and self.adjMatrix[i][j]:
+                        conn += 1
+                setSize+=1
+        return (( setSize )**2) / ( (conn+1)**2)  # works at low numbers
+
     def setFitness(self, vset_obj):
         """ Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 
         >>> g = Graph(4,1,1,True)

@@ -7,7 +7,7 @@ from ivspSolver import *
 grlog = galog = anlog = comblog = ""
 for cnn in [.05, .1, .15, .2]:
     g = Graph(100, cnn)
-    #g.fitfunc = g.tobyFitness
+    g.fitfunc = g.connFitness
     
     # Greedy 
     before = datetime.datetime.now()
