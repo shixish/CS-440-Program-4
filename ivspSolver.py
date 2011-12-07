@@ -113,7 +113,7 @@ class VSetIter:
 class Graph:
     """ A class representing a undirected graph with random connectivity """
     
-    def __init__(self, size, cnn, seed=0, testcase=False, fitfunc=None):
+    def __init__(self, size, cnn, seed=0):
         """  This is the public constructor for the graph class.  
         
           Size is the number
@@ -128,21 +128,7 @@ class Graph:
           seed -- Random number generator seed (default 0).   testcase -- If you want the test case graph, set this to true.
           testcase -- Set to true for the 4x4 static test case
           fitfunc -- Set the fitness function for the GA and annealing solutions to use
-        >>> g = Graph(4,1,1,True) # test case graph generation
-        
-        >>> g
-        Adjacency Matrix: 
-        0    0    1    0    
-        <BLANKLINE>
-        0    0    1    0    
-        <BLANKLINE>
-        1    1    0    1    
-        <BLANKLINE>
-        0    0    1    0    
-        <BLANKLINE>
-        <BLANKLINE>
-        
-        
+
         """
         # Perform error checking
         if size <= 0:
@@ -152,59 +138,32 @@ class Graph:
         if seed < 0:
             raise ValueError("Graph Init: seed must be >= 0.")
         
-        if testcase:
-            self.adjMatrix = [ [ False for j in range(4) ] for i in range(4) ]
-            self.adjMatrix[0][2] = True
-            self.adjMatrix[1][2] = True
-            self.adjMatrix[2][0] = True
-            self.adjMatrix[2][1] = True
-            self.adjMatrix[2][3] = True
-            self.adjMatrix[3][2] = True
-            self.rand = Fxrandom(seed)
-            self.sizeN = 4
-        else:
-            self.cnn = cnn
-            self.sizeN = size
-            self.rand = Fxrandom(seed)
-            if fitfunc == None:
-                fitfunc = self.goodFitness
-            self.fitfunc = fitfunc #define a global fit function to use by default...
-            # print "Initial seed: %s"%(self.rand.seed) #This can be useful if we want to be able reproduce the same results.
-            
-            # Instantiate the class's adjacency matrix to all False values
-            self.adjMatrix = [ [False for j in range(self.sizeN) ] for i in range(self.sizeN) ]
-            
-            # Initialize edges according to a weighted coin flip.
-            # if cnn = 0.1, there will be a 10% chance of creating an edge
-            # between vertices i and j.  Note that there will never be an
-            # edge between a vertex and itself.
-            for i in range(self.sizeN):
-                for j in range(i+1, self.sizeN):
-                    self.adjMatrix[i][j] = self.adjMatrix[j][i] = self.rand.boolBernoulli(cnn)
-                # Debug code
-                #print self.adjMatrix[i]
-                
-            self.vrank = [0 for j in range(self.sizeN)] 
-            for i, row in enumerate(self.adjMatrix):
-                self.vrank[i] = row.count(True)
-            #self.vrank = sorted(self.vrank, key=lambda v: v[1] )
+        # Instantiate class variables
+        self.cnn = cnn
+        self.sizeN = size
+        self.rand = Fxrandom(seed)
+        
+        fitfunc = self.goodFitness #define a global fit function to use by default...
+        
+        # Instantiate the class's adjacency matrix to all False values
+        self.adjMatrix = [ [False for j in range(self.sizeN) ] for i in range(self.sizeN) ]
+        
+        # Initialize edges according to a weighted coin flip.
+        # if cnn = 0.1, there will be a 10% chance of creating an edge
+        # between vertices i and j.  Note that there will never be an
+        # edge between a vertex and itself.
+        for i in range(self.sizeN):
+            for j in range(i+1, self.sizeN):
+                self.adjMatrix[i][j] = self.adjMatrix[j][i] = self.rand.boolBernoulli(cnn)
     
     def greedySolution(self):
-        """ 
-        Finds an independent set using a greedy solution 
-        
-        >>> g = Graph(4,1,1,True)
-
-        >>> g.greedySolution()
-        Vertex set: [True, True, False, True]
-        Fitness: 9.000
-        """
+        """ Finds an independent set using a greedy solution """
         s = VSet.emptySet( self.sizeN )
         
         # Rank the vertexes by their connectedness
         vrank = []
         for i, row in enumerate(self.adjMatrix):
-            vrank.append( [i, self.vrank[i] ])
+            vrank.append( [i, row.count(True) ])
         vrank = sorted( vrank, key=lambda v: v[1] )
                 
         # Try to add each vector from lowest connectedness up.  
@@ -216,43 +175,8 @@ class Graph:
         s.fitness = self.fitfunc( s )
         return s
     
-    def shallowAnnealingOld(self, coolStep=0.85):
-        """ Generate the biggest set using the simulated annealing algorithm 
-        """
-        bestScore = 0
-        for j in range(self.sizeN*2):
-            T = self.sizeN**4
-            curSet = VSet.randomSet(self.sizeN, self.rand)
-            
-            not_converged = True
-            while (not_converged):
-                newSet = VSet( curSet.set )
-                newSet.toggleVertex( random.randrange(self.sizeN) )
-                Delta_s = self.fitfunc(curSet) - self.fitfunc(newSet)
-                if (Delta_s < 0):
-                    curSet = newSet
-                try:
-                    P = math.e**(-Delta_s/T)
-                except OverflowError, e:
-                    print "ERROR: OVERFLOW"
-                    print "e = {0:.3f}".format(math.e)
-                    print "Delta_s = {0:.3f}".format(Delta_s)
-                    print "T = {0:.3f}".format(T)
-                    print "Delta_s/T = {0:.3f}".format(Delta_s/T)
-                if (self.rand.boolBernoulli( P )): 
-                    curSet = newSet
-                T = T * coolStep
-                if T <= 1:
-                    not_converged = False
-            endScore = self.fitfunc( curSet )
-            if endScore > bestScore:
-                bestSet = VSet( curSet )
-                bestScore = endScore
-        bestSet.fitness = self.fitfunc(bestSet)
-        return bestSet
-    
     def shallowAnnealing(self, coolStep = 0.90):
-        """ anneal """
+        """ Generate the biggest set using the simulated annealing algorithm """
         bestSet = VSet.emptySet( self.sizeN )
         bestScore = 0
         for j in range(self.sizeN*25):
@@ -275,17 +199,11 @@ class Graph:
             if score > bestScore:
                 bestScore = score
                 bestSet = VSet( curSet )
+        bestSet.fitness = self.fitfunc(bestSet)
         return bestSet 
-
+    
     def exhaustiveSolution(self):
-        """ Generate the biggest possible independent set of vertices by testing all possibilities 
-        
-        >>> g = Graph(4,1,1,True)
-        
-        >>> g.exhaustiveSolution()
-        Vertex set: [True, True, False, True]
-        Fitness: 9.000
-        """
+        """ Generate the biggest possible independent set of vertices by testing all possibilities """
         maxScore = 0
         for s in VSetIter( self.sizeN ):
             curScore = self.evaluateSet( s )
@@ -294,28 +212,6 @@ class Graph:
                 maxSet = VSet( s )
         maxSet.fitness = self.fitfunc(maxSet)
         return maxSet
-    
-    def branchAndBound(self):
-        """ Use branch and bound to quickly find optimal solution  """
-        cur_sets = [ ]
-        next_sets = [ VSet.emptySet( self.sizeN ) ]
-        bestScore = 0
-        while( len(next_sets) > 0):
-            cur_sets = next_sets
-            next_sets = []
-            for cs in cur_sets:
-                for i in range(self.sizeN):
-                    if not cs[i]:
-                        cs.toggleVertex( i )
-                        score = self.evaluateSet( cs )
-                        if score != -1.0:
-                            next_sets.append( VSet( cs ) )
-                            if score > bestScore:
-                                bestScore = score
-                                bestSet = VSet( cs ) 
-                        cs.toggleVertex( i )
-        return bestSet
-                        
     
     def mutate(self, value, rate=None):
         """ Mutates a given bit with [rate] liklihood """
@@ -477,34 +373,6 @@ class Graph:
                         conn += 1
                 setSize+=1
         return (( setSize )**2) / ( (conn+1)**2) 
-
-    def setFitness(self, vset_obj):
-        """ Test the fitness of a passed set: fitness= [set size]^2 - [connections]^2 
-        >>> g = Graph(4,1,1,True)
-
-        >>> vs = VSet([1,1,0,1])
-        something_happened!
-
-        """
-        # Skip error test and assume len(set) == sizeN for quickness of algorithm
-        setSize = connections = 0
-        for i in range(self.sizeN):
-            if vset_obj[i] :
-                for j in range(i+1, self.sizeN):
-                    if vset_obj[j] and self.adjMatrix[i][j]:
-                        connections+=1
-                setSize+=1
-        fitness = float(setSize*setSize)-(connections*connections)
-        if fitness < 0: #i need the fitness to remain in the positives...
-            fitness = -1/fitness
-        vset_obj.fitness = fitness
-        return fitness
-        
-    def ev(self, vs):
-        fitness = self.evaluateSet(vs)
-        if fitness < 0:
-            fitness = 0
-        return fitness
     
     def evaluateSet(self, vset):
         """ Test to see if a passed set is independent, if yes, size of set is returned, -1 elsewise """
@@ -536,7 +404,7 @@ class Graph:
                 ret += "%i    "%self.adjMatrix[i][j]
             ret += "\n\n"
         return ret #str(self.adjMatrix)
-    
+
 
 ### Statistics class ###
 

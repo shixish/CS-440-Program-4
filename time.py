@@ -4,28 +4,19 @@ import datetime
 import ivspSolver
 from ivspSolver import *
 
-for i in range(10, 110, 10):
+for i in range(10, 30, 1):
     print "Vertex Set Size: ", i
     g = Graph(i, .15)
     g.fitfunc = g.connFitness
     
     # Exhaustive 
-    #before = datetime.datetime.now()
+    before = datetime.datetime.now()
 
-    #vs = g.exhaustiveSolution()
-    #eScore = g.evaluateSet(vs)
+    vs = g.exhaustiveSolution()
+    eScore = g.evaluateSet(vs)
     
-    #after = datetime.datetime.now()
-    #print "Exhaustive score:".rjust(20), str(eScore).rjust(3), " in", str(after-before)
-    
-    # B&B 
-    #before = datetime.datetime.now()
-
-    #vs = g.branchAndBound()
-    #bScore = g.evaluateSet(vs)
-    
-    #after = datetime.datetime.now()
-    #print "B&B score:".rjust(20), str(bScore).rjust(3), " in", str(after-before)
+    after = datetime.datetime.now()
+    print "Exhaustive score:".rjust(20), str(eScore).rjust(3), " in", str(after-before)
     
     # Greedy 
     before = datetime.datetime.now()
@@ -35,7 +26,6 @@ for i in range(10, 110, 10):
     
     after = datetime.datetime.now()
     print "Greedy score:".rjust(20), str(gScore).rjust(3), " in", str(after-before)
-    
     
     # GA 
     before = datetime.datetime.now()
